@@ -40,8 +40,7 @@ $(document).ready(function() {
 });
 ```
 
-где #Rotator - блок внутри которого находятся слайды, 
-.RotatorItem - селектор слайдов,
+где #Rotator - блок внутри которого находятся слайды, .RotatorItem - селектор слайдов,
 #RotatorPrevLink,#RotatorNextLink - селекторы кнопок для переключения слайдов
 
 
