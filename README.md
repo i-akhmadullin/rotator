@@ -1,7 +1,7 @@
 ROTATOR
 =================
 
-Rotator - слайдер на jQuery
+Rotator - слайдер-монстер на jQuery
 
 * В качестве слайдов могут быть как блоковые элементы, так и инлайн(с выравниванием по ширине)
 * Более-менее кроссбраузерен, есть проблемы в опере(ширина некорректно окргуляется оперой).
@@ -11,15 +11,38 @@ Rotator - слайдер на jQuery
 * Сохранение номера слайда в хэше браузера(корректно работает даже при нескольких ротаторах на странице) 
 * Поддержка внешних ссылок на слайды(  ).
 
------
-
 Подключение ротатора:
+-----------
+
+В файле HTML:
 
 ``` html
 <link href="css/rotator.css" rel="stylesheet" type="text/css">
 <script type="text/javascript" src="js/jquery.min.js"></script>
 <script type="text/javascript" src="js/jquery.rotator.js"></script>
 ```
+
+
+Включение в файле javascript:
+``` javascript
+$(document).ready(function() {
+ $("#Rotator").rotator({
+  'items': '.RotatorItem',
+  'prev': '#RotatorPrevLink',
+  'next': '#RotatorNextLink',
+  'visibleCount': 1,
+  'changeCount': 1,
+  //'hashPrefix': "slide",
+  //'autoPlay': true,
+  //'easing': "easeOutQuad",
+  'keyboardNavigation': true
+ });
+});
+```
+где #Rotator - блок внутри которого находятся слайды, 
+RotatorItem - селектор слайдов,
+#RotatorPrevLink,#RotatorNextLink - селекторы кнопок для переключения слайдов
+
 
 Баг-трекер
 -----------
