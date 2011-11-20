@@ -53,17 +53,6 @@ a:hover
 	position: relative;
 	outline: 1px solid red;
 }
-
-/* Для justify ins которым выравниваются блоки по ширине контейнера */
-.HelperIns
-{
-	width: 100%;
-	display: inline-block;
-	text-decoration: none;
-	position: relative;
-	height: 0;
-	font-size: 0;
-}
 /*----------------------------------- Header --------------------------------*/
 .Header
 {
@@ -153,26 +142,4 @@ a:hover
 {
 	border: 1px solid #bbb;
 	font-weight: normal;
-}
-
-/*------------------------------------ Footer --------------------------------*/
-.Footer
-{
-	margin: 0 auto;
-	color: #444;
-	clear: both;
-	font-size: 0.8em;
-	outline: 1px solid grey;
-}
-.Footer .Copyright
-{
-	padding: 15px 0 5px 0;
-	clear: both;
-	color: #B9B9B9;
-}
-.Footer p
-{
-	color: #545454;
-	line-height: 1.4;
-	font-size: 0.85em;
 }

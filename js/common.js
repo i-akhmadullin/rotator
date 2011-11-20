@@ -43,15 +43,24 @@ $.ajaxSetup({
 });
 
 $(document).ready(function() {
-	$("#Rotator").rotator({
+	$("#Rotator").rotator2({
 		'items': '.RotatorItem',
 		'prev': '#RotatorPrevLink',
 		'next': '#RotatorNextLink',
 		'visibleCount': 1,
 		'changeCount': 1,
-		//'hashPrefix': "slide",
 		//'autoPlay': true,
-		//'easing': "easeOutQuad",
 		'keyboardNavigation': true
+	});
+	$("#RotatorWithHashes").rotator2({
+		'items': '.RotatorItem',
+		'prev': '#RotatorPrevLink',
+		'next': '#RotatorNextLink',
+		'visibleCount': 1,
+		'changeCount': 1,
+		'hashPrefix': "slide",
+		//'autoPlay': true,
+		'easing': "easeOutQuad",
+		'keyboardNavigation': false
 	});
 });
