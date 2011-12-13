@@ -1,133 +1,121 @@
 /*
 * Получение номера страницы, на котором находится слайдер:
-*
 *  var current = $('#slider1').data('rotator_link').currentPage; // возвращает номер страницы #
 *
-*
 * Переключение на слайд (внешняя ссылка):
-*
 *  <a href="#" id="slide-jump">Slide 4</a>
-*
 *  $("#slide-jump").click(function(){
 *    $('#slider2').rotator2(4);
 *  });
 *
-*
 *  Управление режимом слайдшоу
-*
-*  $('#slider1').data('rotator_link').startStop(true);		// запустить слайдшоу
-*  $('#slider2').data('rotator_link').startStop(false);		// остановить слайдшоу
 *  $('#slider1').data('rotator_link').goNextPage();			// переключить на след слайд
 *  $('#slider1').data('rotator_link').goPrevPage();			// вернутся на пред слайд
 */
+;Array.prototype.rotate = (function() {
+	var push = Array.prototype.push, splice = Array.prototype.splice;
+	return function(count) {
+		var len = this.length >>> 0, // convert to uint
+			count = count >> 0; // convert to int
+		// convert count to value in range [0, len[
+		count = ((count % len) + len) % len;
+		push.apply(this, splice.call(this, 0, count));
+		return this;
+	};
+})();
+allowBreakpoints = false;
 
 ;(function ($) {
 	$.rotator2 = function(el, options) {
 
-		var base = this;
-
-		base.$el = $(el); //.addClass('');
-
-		// Add a reverse reference to the DOM object
+		var base = this, o; // o - это настройки
+		base.$el = $(el);
 		base.$el.data("rotator_link", base);
 
 		base.currentPage = 1;
-		base.timer = null;					// Таймер, автоматически переключает слайды
-		base.animating = false;				// Индикатор того, что ротатор в процессе анимации между слайдами
-		base.playing = false;				// Внутренний индикатор активности режима слайдшоу
+		base.timer       = null;				// Таймер, автоматически переключает слайды
+		base.animating   = false;				// Индикатор того, что ротатор в процессе анимации между слайдами
+		base.playing     = false;				// Внутренний индикатор активности режима слайдшоу
+		base.items       = [];					// Массив слайдов
 
 		base.init = function() {
 
-			base.options = $.extend({},$.rotator2.defaults, options);
-			if (base.options.changeCount > base.options.visibleCount) {
-				base.options.changeCount = base.options.visibleCount;
-			}
+			base.options = o = $.extend({},$.rotator2.defaults, options);
+			if (o.blocksChangePerPage > o.blocksPerScreen) { o.blocksChangePerPage = o.blocksPerScreen; }
 
-			// Сохраняем заголовок страницы, чтобы вернутся к нему(в И9 почему-то сбрасывается заголовок при использовании хэшей)
-			var title = document.title;
+			base.$items = base.$el.find(o.itemsSelector);
+			base.items  = base.$items.toArray();
 
-			// Cache existing DOM elements for later
-			base.$items = base.$el.find(base.options.items);
-
-			base.items_count = base.$items.length;
-			base.containerName = "RotatorContainer";												// В контейнер с таким классом будут обёрнуты все слайды
+			base.items_count       = base.$items.length;
+			base.containerName     = "RotatorContainer";											// В контейнер с таким классом будут обёрнуты все слайды
 			base.containerSelector = "." + base.containerName;										// Селектор для контейнера
-			base.after_animate_css = { 'margin-left': 0, 'left': 0 };
-
-			base.opera_after_animate_css = { 'margin-left': 0, 'left': '-100%' };					// центруем слайды в ротаторе (для 3х слайдов)
+			base.after_animate_css = { 'margin-left': "-100%", 'left': 0 };
 
 			var buttons_array = [];
-			if (base.options.prev) { buttons_array.push(base.options.prev); }
-			if (base.options.next) { buttons_array.push(base.options.next); }
-			base.options.buttons_selector = buttons_array.join(', ');								// объединили CSS-селекторы кнопок "вперед" и "назад" в единый селектор
+			if (o.prev) { buttons_array.push(o.prev); }
+			if (o.next) { buttons_array.push(o.next); }
+			o.buttons_selector = buttons_array.join(', ');		// объединили CSS-селекторы кнопок "вперед" и "назад" в единый селектор
 
-			if (base.options.visibleCount > base.options.items_count) { base.options.visibleCount = base.items_count; }
-			if (!$.isFunction( $.easing[base.options.easing] )) { base.options.easing = "swing"; }			// Проверяем есть ли указанная анимация
+			if (o.blocksPerScreen > o.items_count) { o.blocksPerScreen = base.items_count; }
+			if (!$.isFunction( $.easing[o.easing] )) { o.easing = "swing"; }
 
-			base.page_count = Math.ceil(base.items_count / base.options.changeCount);				// кол-во страниц слайдера = кол-во слайдов / сколько менять за 1 переключение
-			base.block_count = Math.ceil(base.items_count / base.options.visibleCount) + 1;			// кол-во блоков = кол-во слайдов / сколько влазит на страницу
-			base.container_width = 100 * base.block_count;											// ширина контейнера = 100*кол-во блоков (переведено в проценты, без знака '%' )
-			base.items_width = 100 / (base.block_count * base.options.visibleCount);				// ширина слайдов = 100 / (кол-во блоков*сколько влазит на страницу)
+			base.page_count = Math.ceil(base.items_count / o.blocksChangePerPage);							// кол-во страниц слайдера = кол-во слайдов / сколько менять за 1 экран
+			base.block_count = Math.ceil(base.items_count / o.blocksPerScreen) + 1;					// кол-во блоков = кол-во слайдов / сколько влазит на страницу
+			base.container_width = 100 * 4;
+			base.items_width = 100 / (4 * o.blocksPerScreen);
 
-			if (base.operamode) {
-				base.block_count = 5;	// в ротаторе помещается 5 страниц: текущая,пред,след, на кот переходим одна из её соседних
-				base.container_width = 100 * base.block_count;
-				base.items_width = 100 / (base.block_count * base.options.visibleCount);
+			base.$items.each(function (i) { $(this).data('index', i + 1).attr("index", i + 1); })
+					   .css('width', base.items_width + '%')
+					   .wrapAll('<div style="width: ' + base.container_width + '%;' + '" class="' + base.containerName + '" />');
+			base.$container = base.$el.children(base.containerSelector);
+
+			if(base.page_count > 3) {		// сдвигаем массив слайдов так чтобы вначале стояли слайды с последней страницы
+				base.cycleItems(-o.blocksPerScreen);
+				base.$container.find(o.itemsSelector).remove();										// убираем в память все слайды
+				base.$container.append(base.items.slice(0, 3*o.blocksPerScreen));				// добавляем слайдов только на три страницы
+				base.$container.css({ 'margin-left': -base.items_width * 4 * o.blocksPerScreen + '%' });
 			}
 
-			base.$items.css('width', base.items_width + '%')
-				.wrapAll('<div style="width: ' + base.container_width + '%;' + '" class="' + base.containerName + '" />')	// оборачиваем все слайды в контейнер
-				.each(function (i) { $(this).data('index', i + 1); });								// в каждый слайд сохраняем его порядковый номер
-			base.$container = base.$el.children(base.containerSelector);							// контейнер = обертка слайдов
-
-			// base.settings = settings;
-
-			if (base.operamode) {
-				base.$items.slice(3 * base.options.visibleCount,base.items_count).hide(); // Оставляем блоки только с первых трех страниц
-			}
-
-			if (base.items_count <= base.options.visibleCount) {
-				$(base.options.buttons_selector).hide();
-				$(base.options.navigation).hide();
+			if (base.items_count <= o.blocksPerScreen) {
+				base.$el.addClass("static-rotator");
+				$(o.buttons_selector).hide();
+				$(o.navSelector).hide();
 			} else {
 				base.buildNextPrevButtons();
-				if (base.options.navigation && base.page_count > 1) {
+				if (o.navSelector && base.page_count > 1) {
 					base.buildNavigation();
 				}
-				if (base.options.useSwipeTouch) {
+				if (o.useSwipeTouch) {
 					base.addSwipeTouchListener();
 				}
-				if (base.options.keyboardNavigation) {
+				if (o.keyboardNavigation) {
 					base.addKeyboardListener();
 				}
-				if (base.options.autoPlay) {
+				if (o.autoPlay) {
 					base.playing = true;
-					//wrapper.rotator('buildAutoPlay');
 					base.startStop();
 				}
-				if (base.options.pauseOnHover) {
+				if (o.pauseOnHover) {
 					base.addOnHoverListener();
 				}
-				if (base.options.hashPrefix) {
-					base.addHashChangeListener(title);
-					$(window).trigger('hashchange');	// проверка на наличие хэша при загрузке страницы
+				if (o.hashPrefix) {
+					base.addHashChangeListener();
+					$(window).trigger('hashchange');
 				}
 			}
 		};
 
 		/* Обработчик изменения хэша страницы */
-		base.addHashChangeListener = function(title) {
+		base.addHashChangeListener = function() {
 			$(window).bind("hashchange", function(e) {
-				var page = e.getState(base.options.hashPrefix, true) || 1;
+				var page = e.getState(o.hashPrefix, true) || 1;
 				if (!base.animating) {
-					//document.title = title;
 					base.gotoPage('' + page);
 				} else {
 					//console.log("сменился хэш, в то время как ротатор анимируется, игнор");
 				}
 			});
 		};
-
 		base.addSwipeTouchListener = function() {
 			$(this).bind({
 				"swipeleft": function () {
@@ -138,7 +126,6 @@
 				}
 			});
 		};
-
 		base.addKeyboardListener = function() {
 			$(document).keydown(function(e) {
 				if (base.animating) { return false; }
@@ -150,14 +137,11 @@
 			});
 		};
 		base.addOnHoverListener = function() {
-			// next + prev + settings.navigation
-			var rotator_area = [];
-			if (base.options.prev) { rotator_area.push(base.options.prev); }
-			if (base.options.next) { rotator_area.push(base.options.next); }
-			if (base.options.navigation) { rotator_area.push(base.options.navigation); }
-			base.hover(
-				function() { base.clearTimer(); },
-				function() { base.startStop(); } );
+			var rotator_area = [];				// ротатор + next + prev + navigation
+			rotator_area.push(base);
+			if (o.prev) { rotator_area.push(o.prev); }
+			if (o.next) { rotator_area.push(o.next); }
+			if (o.navSelector) { rotator_area.push(o.navSelector); }
 			$(rotator_area.join(', ')).hover(
 				function() { base.clearTimer(); },
 				function() { base.startStop(); } );
@@ -165,114 +149,61 @@
 		/* Инициализация навигационной панели */
 		base.buildNavigation = function() {
 			var page_count = base.page_count;	// выделил в отдельную переменную, чтобы в цикле не пересчитывалось
+			var pages_in_page, changeCount;
 			for (var i = 0; i < page_count; i++) {
-				var pages_in_page = [];
-				var changeCount = base.options.changeCount;
+				pages_in_page = [];
+				changeCount = o.blocksChangePerPage;
 				for (var j = i * changeCount + 1; j < ((i + 1) * changeCount + 1); j++) {
 					pages_in_page.push(j);
 				}
-				var nav_link = $(base.options.navPageTemplate.replace("$i", (i + 1))).data('page', i).data('items', pages_in_page).attr("title", "Нажмите для перехода на слайд "+(i+1));
-				if (base.options.hashPrefix) { nav_link.attr("href", "#" + base.options.hashPrefix + "_" + (i + 1)); }	// как у jQuery.bbq плагина
-				if (base.options.navDrawPageNumber) { nav_link.text(i + 1); }	// было html вместо text
-				$(base.options.navigation).append(nav_link);
+				var nav_link = $(o.navPageTemplate.replace("$i", (i + 1))).data('page', i).data('items', pages_in_page).attr("title", "Нажмите для перехода на слайд "+(i+1));
+				if (o.hashPrefix) { nav_link.attr("href", "#" + o.hashPrefix + "=" + (i + 1)); }
+				if (o.navDrawPageNumber) { nav_link.text(i + 1); }
+				$(o.navSelector).append(nav_link);
 			}
-			$(base.options.navigation).children('a').first().addClass('Active');
-			$(base.options.navigation).delegate('a', 'click', function () {
-				if (base.animating || $(this).hasClass('Active')) {
-					return false;
-				}
+			$(o.navSelector).find('a').first().addClass('Active');
+			$(o.navSelector).delegate('a', 'click', function () {
+				if (base.animating || $(this).hasClass('Active')) {	return false; }
 				var target_page = $(this).data('items')[0];
 				$(this).addClass('Active').siblings().removeClass('Active');
-				if (base.options.hashPrefix) {
+				if (o.hashPrefix) {
 					base.updateHashUrl(target_page);
 				}
 				base.gotoPage(target_page);
 				return false;
 			});
 		};
-
 		/* Инициализация кнопок вперед/назад */
 		base.buildNextPrevButtons = function() {
-			if (base.options.hashPrefix) {
-				base.updateNextPrevLinks();
-			}
-			base.$el.parent().find(base.options.buttons_selector).click(function () {
+			if (o.hashPrefix) {	base.updateNextPrevLinks();	}
+			base.$el.parent().find(o.buttons_selector).click(function () {
 				if(!base.animating) {
-					if ($(this).is(base.options.prev)) {
-						base.goPrevPage();
-					} else {
-						base.goNextPage();
-					}
+					if ($(this).is(o.prev)) { base.goPrevPage(); }
+					else { base.goNextPage(); }
 				}
 				return false;
 			});
 		};
-		base.animateRotator = function(container_shift, start_index, step, is_prev) {
-			var $navlinks = $(base.options.navigation).children('a'),
-				duration = base.options.speed,
-				rotator_container = base.$container;
-
-				rotator_container.animate({ left: container_shift }, {
-					duration: duration,
-					easing: base.options.easing,
-					complete: function () {
-						if (!is_prev && !base.operamode) {
-							rotator_container.children(base.options.items).filter(":visible").slice(0, step).hide();
-						}
-						var current_page = base.currentPage;
-						if (base.options.navigation) {
-							$navlinks.removeClass('Active').each(function () {
-								if (jQuery.inArray(current_page, $(this).data('items')) > -1) {
-									$(this).addClass('Active');
-								}
-							});
-						}
-						if (base.options.hashPrefix) {
-							base.updateNextPrevLinks();
-						}
-						if (!base.operamode) {
-							rotator_container.children(base.options.items).filter("[is_clone=true]").detach();
-							rotator_container.css(base.after_animate_css);
-						} else {
-							if (!is_prev) {
-								rotator_container.children(base.options.items).slice(0,2).detach();
-							} else {
-								rotator_container.children(base.options.items).slice(-2).detach();
-							}
-							rotator_container.css(base.opera_after_animate_css);
-						}
-						base.animating = false;
-						if (base.options.onMoveComplete && typeof(base.options.onMoveComplete) == 'function') {
-							base.options.onMoveComplete(current_page);
-						}
-					}
-				});
-		};
-		/*base.buildAutoPlay = function() { //TODO
-		};*/
-
 		/* startStop(false) - поставить на паузу, startStop(true) - запустить слайдшоу */
 		base.startStop = function() {
 			if (base.playing !== true) { base.playing = false; }
 
-			if (base.playing){
+			if (base.playing) {
 				base.clearTimer();
 				base.timer = setTimeout(function() {
 					if (!base.animating) { base.goNextPage(); }
-				}, base.options.delay + base.options.speed);
+				}, o.delay + o.duration);
 			} else {
 				base.clearTimer();
 			}
 		};
-
 		base.clearTimer = function() {
 			if (base.timer) { clearTimeout(base.timer); }			// Обнуляем таймер, если он был установлен
 		};
-
-		/* Обновляет хэш в адресной строке: <хэш_префикс_ротатора>=<target_page> */
+		/* Обновляет хэш адресной строки: префикс_ротатора=target_page */
 		base.updateHashUrl = function(target_page) {
 			var state = {};
-			state[base.options.hashPrefix] = target_page;
+			state[o.hashPrefix] = target_page;
 			$.bbq.pushState(state);
 		};
 
@@ -280,8 +211,8 @@
 		base.updateNextPrevLinks = function() {
 			var prev_index = getPrevPageIndex(base.currentPage, base.items_count),
 				next_index = getNextPageIndex(base.currentPage, base.items_count);
-			$(base.options.prev).attr("href", "#" + base.options.hashPrefix + "_" + prev_index);
-			$(base.options.next).attr("href", "#" + base.options.hashPrefix + "_" + next_index);
+			$(o.prev).attr("href", "#" + o.hashPrefix + "=" + prev_index);
+			$(o.next).attr("href", "#" + o.hashPrefix + "=" + next_index);
 		};
 
 		/* загружаем слайд на который переходим и его соседей начиная с правого */
@@ -299,165 +230,145 @@
 				var slide_src = $slide.attr('loadsrc');
 				if (slide_src) {
 					$("<img />").attr('src', slide_src)
-						.load(function(response) {
-							var img = $(response.currentTarget).attr('src');
+						.load(function(/*response*/) {
+							//var img = $(response.currentTarget).attr('src');
 							$slide.attr('src', slide_src);
 						});
 				}
 				//$(".ContentRotatorLoader").hide();
-			} else {
-				return; // нет такого слайда
-			}
+			} else { /* нет такого слайда */ }
 		};
 
 		base.changeToSlide = function(index) {
 			var src_to_load = base.$items.eq(index-1).attr('loadsrc'),
-				$loader = $(".ContentRotatorLoader");
-			$loader.show();
-				//$("<img />").attr('src', src_to_load)
-				//	.load(function(response) {  			// ie8 не понимайт (плагин ImageLoaded есть для таких случаев)
-				//		var img = $(response.currentTarget).attr('src');
-			base.$container.children(base.options.items).first().attr('src', src_to_load);
+				$loader = $(".ContentRotatorLoader").show();
+			base.$container.children(o.itemsSelector).first().attr('src', src_to_load);
 			$loader.hide();
-				//});
-			if (base.options.hashPrefix) {
-				base.updateNextPrevLinks();
-			}
+			if (o.hashPrefix) { base.updateNextPrevLinks(); }
 			base.animating = false;
-			if (base.options.onMoveComplete && typeof(base.options.onMoveComplete) == 'function') {
-				base.options.onMoveComplete(base.currentPage);
+			if (o.onMoveComplete && typeof(o.onMoveComplete) == 'function') {
+				o.onMoveComplete(base.currentPage);
 			}
 		};
-
-		/*
-			Переход на страницу с указанным индексом и
-			prev/next - перейти на пред/след страницу
-		*/
+		/* Переход на страницу с указанным индексом и prev/next - перейти на пред/след страницу	*/
 		base.gotoPage = function(end_index) {
-			if (base.animating) { return; }
+			if (base.animating || base.currentPage == end_index) { return; }
 			base.animating = true;
-			base.clearTimer();												/* выключаем таймер слайдшоу на время переключения слайдов */
-			var rotator_container = base.$container,
-				current_rotator = rotator_container.find(base.options.items).filter(":visible").first(),
-				start_index = current_rotator.data('index');
+			base.clearTimer();
+
+			var value_right, step, is_prev,
+				need_rotators, next_rotators,
+				notFittedSlides   = null,
+				rotator_container = base.$container,
+				start_index       = base.currentPage,
+				current_rotator   = rotator_container.find(o.itemsSelector).filter(function() { return $(this).data("index") == start_index });
+
 			if (end_index == 'prev' || end_index == 'next') {
-				var step = base.options.changeCount,
-					is_prev = (end_index == 'prev');
-				base.currentPage = parseInt((is_prev) ? getPrevPageIndex(base.currentPage, base.items_count) : getNextPageIndex(base.currentPage, base.items_count), 10);
+				step    = o.blocksChangePerPage;
+				is_prev = (end_index == 'prev');
+				end_index = parseInt( is_prev ? getPrevPageIndex(start_index, base.items_count) : getNextPageIndex(start_index, base.items_count), 10);
 			} else {
-				base.currentPage = parseInt(end_index, 10);
-				var step = Math.abs(start_index - end_index),
-					step = (step > base.items_count / 2) ? base.items_count - step : step,
-					value_right = (start_index + step) % base.items_count,
-					value_right = (value_right == 0) ? base.items_count : value_right,
-					is_prev = (value_right != end_index);
-				if (step == base.items_count / 2) {
-					is_prev = false;
-				}
-				if (start_index == end_index) {
-					base.animating = false;
-					return this;
-				}
+				end_index = parseInt(end_index, 10);
+				step         = Math.abs(start_index - end_index);
+				step         = (step > base.items_count / 2) ? base.items_count - step : step;
+				value_right  = (start_index + step) % base.items_count;
+				value_right  = (value_right == 0) ? base.items_count : value_right;
+				is_prev      = (value_right != end_index);
+				if (step == base.items_count / 2) { is_prev = false; }
 			}
-			var move_by = 100 * step / base.options.visibleCount;
-			if (base.operamode && move_by > 200) {
-				move_by = 200;
-			}
-			var container_shift = ((is_prev) ? '+' : '-') + '=' + move_by + '%';
+			base.nextPage = end_index;
+			if (is_prev && step > o.blocksPerScreen) {		// будут "пропущены" слайды между экранами
+				rotator_container.find(o.itemsSelector).slice(-o.blocksPerScreen).remove();
+				base.cycleItems(null, end_index);
 
-			if (base.operamode) {
-				base.changeToSlide(base.currentPage );
-				base.startStop();
-				return;
-
-				if (is_prev) {
-					var next_rotators = current_rotator.prevAll(base.options.items).slice(0, step);		// Запрос на нужное количество предыдущих слайдов
-					if (next_rotators.length < step) {								// Предыдущих слайдов меньше чем требуется, значит надо перенести из конца
-						var need_rotators = step - next_rotators.length;			// Количество слайдов для переноса из конца в начало
-
-						$(base.$items.slice(base.currentPage-2, base.currentPage).get().reverse()).each(function () {
-							next_rotators.add($(this).attr('is_clone', 'true').clone(true).prependTo(rotator_container).removeAttr('is_clone'));
-						});
+				var slidesToAdd = base.items.slice(o.blocksPerScreen, 2*o.blocksPerScreen);
+				if (slidesToAdd.length == o.blocksPerScreen) {
+					rotator_container.prepend(slidesToAdd);
+					var notEnoughSlides = 3*o.blocksPerScreen - rotator_container.find(o.itemsSelector).length;
+					if (notEnoughSlides > 0) {
+						console.log(notEnoughSlides);
+						rotator_container.prepend(base.items.slice(o.blocksPerScreen-notEnoughSlides,2*o.blocksPerScreen-notEnoughSlides));
 					}
-					// Из-за того, что вперед были добавлены слайды, теперь надо вернуть начальную позицию ротатора обратным смещением
-					rotator_container.css({ 'margin-left': -200 + '%' });
-
-				} else {			// Движение слайдов вправо
-					next_rotators = current_rotator.nextAll(base.options.items).slice(step - 1, step + base.options.visibleCount - 1);
-					if (next_rotators.length < Math.max(base.options.visibleCount, step)) {
-						var need_rotators = Math.max(base.options.visibleCount, step) - next_rotators.length;
-
-						base.$items.slice(base.currentPage-1, base.currentPage+1).each(function () {
-							if ($(this).is(":visible")) {
-								next_rotators.add($(this).attr('is_clone', 'true').clone(true).appendTo(rotator_container).removeAttr('is_clone'));
-							} else {
-								next_rotators.add($(this).detach().appendTo(rotator_container).show());
-							}
-						});
-					}
+					if (allowBreakpoints) debugger;
 				}
-			} else {
-				if (is_prev) {
+				rotator_container.css('margin-left', -200 + '%');
+			} else if (!is_prev && step > 2*o.blocksPerScreen-1) {		// будут "пропущены" слайды между экранами
+				base.cycleItems(null, end_index);
+				rotator_container.find(o.itemsSelector).slice(0, o.blocksPerScreen).remove();
 
-					var next_rotators = current_rotator.prevAll(base.options.items).slice(0, step);		// Запрос на нужное количество предыдущих слайдов
-					if (next_rotators.length < step) {								// Предыдущих слайдов меньше чем требуется, значит надо перенести из конца
-						var need_rotators = step - next_rotators.length;			// Количество слайдов для переноса из конца в начало
-						$(rotator_container.children(base.options.items).slice(-need_rotators).get().reverse()).each(function () {
-							next_rotators.add($(this).attr('is_clone', 'true').clone(true).prependTo(rotator_container).removeAttr('is_clone'));
-						});
-					}
-					// Из-за того, что вперед были добавлены слайды, теперь надо вернуть начальную позицию ротатора обратным смещением
-					rotator_container.css({ 'margin-left': -base.items_width * step * base.block_count + '%' });
+				rotator_container.append(base.items.slice(o.blocksPerScreen, 2*o.blocksPerScreen));
+				rotator_container.css('margin-left', 0 + '%');
+				if (allowBreakpoints) debugger;
+			} else if (!is_prev && step > o.blocksPerScreen && step <= 2*o.blocksPerScreen) {
+				base.cycleItems( null, end_index );
+				var blocksToDel = Math.abs(step) % o.blocksPerScreen;
+				marginLeft = -100 + (is_prev ? -100 : 100)*(blocksToDel/o.blocksPerScreen);
 
-					var prev_rotators = current_rotator.prevAll(base.options.items).slice(step - 1, step + base.options.visibleCount - 1);
-					if (base.options.lazyLoad) {
-						base.loadSlideAndSiblings(prev_rotators);
-					}
-				} else {
-					// Движение слайдов вправо. Следующие слайды.
-					current_rotator.nextAll(base.options.items).filter(":hidden").show(); //Показать все следующие
-					next_rotators = current_rotator.nextAll(base.options.items).slice(step - 1, step + base.options.visibleCount - 1); // Запрос на нужное количество следующих слайдов
+				rotator_container.find(o.itemsSelector).slice(0, blocksToDel).remove();
+				rotator_container.append(base.items.slice(o.blocksPerScreen, 2*o.blocksPerScreen));
 
-					if (next_rotators.length < Math.max(base.options.visibleCount, step)) {
-						//Следующих слайдов меньше чем требуется, значит надо перенести из начала
-						var need_rotators = Math.max(base.options.visibleCount, step) - next_rotators.length;
-						rotator_container.children(base.options.items).slice(0, need_rotators).each(function () {
-							if ($(this).is(":visible")) {
-								next_rotators.add($(this).attr('is_clone', 'true').clone(true).appendTo(rotator_container).removeAttr('is_clone'));
-							} else {
-								next_rotators.add($(this).detach().appendTo(rotator_container).show());
-							}
-						});
-					}
-					if (base.options.lazyLoad) {
-						base.loadSlideAndSiblings(next_rotators);
-					}
-				}
+				rotator_container.css('margin-left', marginLeft + '%');
+			} else {	// слайдимся по обычному
+				var marginLeft;
+				base.cycleItems( null, end_index );
+				marginLeft = -100 + (is_prev ? -100 : 100)*(step/o.blocksPerScreen);
+
+				rotator_container.find(o.itemsSelector).remove();
+				rotator_container.append(base.items.slice(0, 3 * o.blocksPerScreen));
+
+				rotator_container.css('margin-left', marginLeft + '%');
+				if (allowBreakpoints) debugger;
 			}
-			if (next_rotators.length > 0) {
-				next_rotators.show();
-			} else {  }
-
-			base.animateRotator(container_shift, start_index, step, is_prev);
+			if (o.onBeforeAnimation && typeof(o.onBeforeAnimation) == 'function') {
+				o.onBeforeAnimation(current_page);
+			}
+			base.animateRotator(start_index, step, is_prev);
 			base.startStop();
+		};
+		base.animateRotator = function(start_index, step, is_prev) {
+			var animationStep = Math.min(step, 2*o.blocksPerScreen);
+			var move_by = animationStep * 100 / o.blocksPerScreen,
+				container_shift = ((is_prev) ? '+' : '-') + '=' + move_by + '%';
+
+			base.$container.animate({ left: container_shift}, {
+				duration: o.duration,
+				easing: o.easing,
+				complete: function () {
+					base.onAnimationComplete(is_prev, step);
+				}
+			});
+		};
+		base.onAnimationComplete = function(is_prev, step) {
+			var rotator_container = base.$container,
+				$navlinks = $(o.navSelector).find('a');
+
+			rotator_container.find(o.itemsSelector).remove();
+			var slides = base.items.slice(0, 3*o.blocksPerScreen);
+			rotator_container.append(slides).css(base.after_animate_css);
+
+			base.cycleItems(null, base.nextPage);
+			base.currentPage = base.nextPage;
+
+			var current_page = base.currentPage;
+			if (o.navSelector) { $navlinks.removeClass('Active').eq(current_page-1).addClass("Active"); }
+			if (o.hashPrefix) { base.updateNextPrevLinks(); }
+			base.animating = false;
+			if (o.onMoveComplete && typeof(o.onMoveComplete) == 'function') {
+				o.onMoveComplete(current_page);
+			}
 		};
 
 		base.goNextPage = function() {
-			if (base.options.hashPrefix) {
-				base.updateHashUrl(getNextPageIndex(base.currentPage, base.items_count));
-			}
+			if (o.hashPrefix) { base.updateHashUrl(getNextPageIndex(base.currentPage, base.items_count)); }
 			base.gotoPage('next');
 		};
-
 		base.goPrevPage = function() {
-			if (base.options.hashPrefix) {
-				base.updateHashUrl(getPrevPageIndex(base.currentPage, base.items_count));
-			}
+			if (o.hashPrefix) {	base.updateHashUrl(getPrevPageIndex(base.currentPage, base.items_count)); }
 			base.gotoPage('prev');
 		};
 		/* В разработке */
 		base.centerOnCurrentSlide = function() {
-			var distToCenter = 3;//Math.ceil(base.options.visibleCount/2) - 1;
+			var distToCenter = 3;//Math.ceil(o.visibleCount/2) - 1;
 			var threshold = 1;									// по одному слайду слева и справа от центрального слайда можно нажимать без переключения ротатора
 			var currentPage = base.currentPage;
 			var centerSlide = currentPage + distToCenter;
@@ -468,36 +379,44 @@
 				base.gotoPage('' + page_index);
 			}
 		};
+		base.cycleItems = function(diff, targetpage) {
+			if (targetpage) {
+				var slidingDiff = targetpage - $(base.items.slice(o.blocksPerScreen,o.blocksPerScreen+1)).attr("index");
+				base.items.rotate(slidingDiff);
+			}
+		}
+
 		// Trigger the initialization
 		base.init();
 	};
 
 	$.rotator2.defaults = {
-		items: '.RotatorItem',			// Селектор слайдов
+		itemsSelector: '.RotatorItem',	// Селектор слайдов
 		prev: null,						// Селектор кнопки "Назад"
 		next: null,						// Селектор кнопки "Вперед"
 
-		visibleCount: 1,				// Количество видимых элементов
-		changeCount: 1,					// Количество меняющихся элементов
-		speed: 1000,					// Скорость прокрутки одного слайда
+		blocksPerScreen: 1,				// Сколько блоков влазит на один экран
+		blocksChangePerPage: 1,			// На сколько блоков передвигается ротатор при переключении на 1 страницу
+		duration: 1000,					// Скорость прокрутки одного слайда
 		easing: "swing",				// Эффекты переходов кроме "linear" или "swing" (т.е. нестандартные) требуют для работы easing-плагин
 
-		navigation: null,				// Селектор для навигационного бара
+		navSelector: null,				// Селектор для навигационного бара
 		navDrawPageNumber: false,		// Рисовать ли на кнопках нав. бара номера страниц
 		navPageTemplate: '<a href="#$n"><span>$i</span></a>', // Шаблон для кнопки в навигаторе
 		keyboardNavigation: false,		// Переключение слайдов по стрелкам клавиатуры. Больше одного на страницу врядли стоит делать.
 
-		onMoveComplete: false, 			// Функция, вызываемая после завершения анимации шага
+		onBeforeAnimation: false,		// Функция, вызываемая прямо перед анимацией
+		onMoveComplete: false, 			// Функция, вызываемая после завершения анимации переключения слайдов
 
 		autoPlay: false,				// Режим слайдшоу
-		delay: 6000, 					// Задержка между переключениями слайдов в режиме слайдшоу (без учета speed)
+		delay: 6000, 					// Задержка между переключениями слайдов в режиме слайдшоу (без учета duration)
 		pauseOnHover: false,			// Ставить ротатор на паузу, когда мышь над ним. На айпаде нет ховера!
 
 		useSwipeTouch: false,			// Прокрутка слайдов по тачпадовским жестам.
-		hashPrefix: false,				// Префикс на который ротатор будет отзываться, если не указан - на хэши ротатор не реагирует.
-		lazyLoad: false,				// Загружать только слайд на который переходим, работает только для 1 картинки на слайд
-		fixopera: false,				// Deprecated
-		newMode: true
+		hashPrefix: false,				// Префикс на который ротатор будет отзываться, если указан
+		lazyLoad: false, 				// Загружать только слайд на который переходим, раньше работал только для 1 картинки на слайд
+
+		startPage: 1					//TODO C какой страницы начинать отображать слайдер
 	};
 
 	function getPrevPageIndex(cur_page_index, page_count) {
@@ -506,20 +425,18 @@
 	function getNextPageIndex(cur_page_index, page_count) {
 		return (cur_page_index < page_count) ? (cur_page_index + 1) : 1;
 	}
-
 	$.fn.rotator2 = function(options) {
 		// init slider
 		if ((typeof(options)).match('object|undefined')) {
-			return this.each(function(i) {
+			return this.each(function() {
 				(new $.rotator2(this, options));
 			});
 		// If options is a number, process as an external link to page #: $(element).anythingSlider(#)
 		} else if (/\d/.test(options) && !isNaN(options)) {
-			return this.each(function(i) {
+			return this.each(function() {
 				var founded_rotator = $.data(this,'rotator_link');
 				if (founded_rotator) {
 					var page = (typeof(options) == "number") ? options : parseInt($.trim(options),10); // accepts "  2  "
-					// ignore out of bound pages
 					if ( page < 1 || page > founded_rotator.items_count ) { return; }
 					founded_rotator.gotoPage(page);
 				}

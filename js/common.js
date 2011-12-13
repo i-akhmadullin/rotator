@@ -44,23 +44,64 @@ $.ajaxSetup({
 
 $(document).ready(function() {
 	$("#Rotator").rotator2({
-		'items': '.RotatorItem',
+		"itemsSelector": '.RotatorItem',
 		'prev': '#RotatorPrevLink',
 		'next': '#RotatorNextLink',
-		'visibleCount': 1,
-		'changeCount': 1,
+		"blocksPerScreen": 1,
+		"blocksChangePerPage": 1,
 		//'autoPlay': true,
 		'keyboardNavigation': true
 	});
 	$("#RotatorWithHashes").rotator2({
-		'items': '.RotatorItem',
+		"itemsSelector": '.RotatorItem',
 		'prev': '#RotatorPrevLink',
 		'next': '#RotatorNextLink',
-		'visibleCount': 1,
-		'changeCount': 1,
+		"blocksPerScreen": 1,
+		"blocksChangePerPage": 1,
 		'hashPrefix': "slide",
 		//'autoPlay': true,
 		'easing': "easeOutQuad",
-		'keyboardNavigation': false
+		'keyboardNavigation': false,
+		"navSelector": '#RotatorPaging',
+        'navPageTemplate': '<a href="#"><span>$i</span></a>'
 	});
+	$("#RotatorWithHashesAndMultipleBlocks").rotator2({
+		itemsSelector: '.RotatorItem',
+		prev: '#RotatorPrevLink',
+		next: '#RotatorNextLink',
+		blocksPerScreen: 3,
+		blocksChangePerPage: 1,
+		hashPrefix: "slide",
+		//'autoPlay': true,
+		easing: "easeOutQuad",
+		keyboardNavigation: false,
+		navSelector: '#RotatorPaging',
+        navPageTemplate: '<a href="#"><span>$i</span></a>',
+		onMoveComplete: function(index){
+			testarray=[];
+			$("#RotatorWithHashesAndMultipleBlocks").find(".RotatorItem").each(function() { testarray.push($(this).attr("index")); })
+			$("#result").html("Result array: "+testarray.slice(0,3).toString()+",<span style=\"color:red;\">"+testarray[3]+"</span>," + testarray.slice(4).toString() );
+		}
+	});
+	var testarray = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20];
+	
+	$("#tester").click(function() {
+		var diff = parseInt( $("#wtf").val(), 10) ;
+		cycleItems( diff );
+		$("#result").html( "rotated by " + diff + ". Result array: "+testarray.slice(0,3).toString()+",<span style=\"color:red;\">"+testarray[3]+"</span>," + testarray.slice(4).toString() );
+	})
+	$("#target-tester").click(function() {
+		var targetPage = parseInt( $("#target-wtf").val(), 10) ;
+		cycleItems( null, targetPage );
+		$("#target-result").html( "rotated to page " + targetPage + ". Result array: "+testarray.slice(0,3).toString()+",<span style=\"color:red;\">"+testarray[3]+"</span>," + testarray.slice(4).toString() );
+	})
+	function cycleItems(diff, targetpage) {
+		if (targetpage) {
+			var slidingDiff = targetpage - testarray.slice(3,4);
+			console.log(testarray.slice(3,4));
+			testarray.rotate(slidingDiff);
+		} else {
+			testarray.rotate(diff);
+		}
+	}
 });
