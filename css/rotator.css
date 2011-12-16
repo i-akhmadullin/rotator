@@ -11,95 +11,99 @@
 	.RotatorNextLink
 	{
 		width: 85px;
-		height: 100%;
+		height: 80%;
 		display: block;
 		position: absolute;
-		top: 0;
+		top: 10%;
 		z-index: 5;
 		text-decoration: none;
-		/* opacity: 0.5; */
 	}
 	.RotatorPrevLink
 	{
 		left: 0;
 	}
-	.RotatorPrevLink span
-	{
-		width: 65px;
-		height: 96px;
-		margin: -48px auto 0 auto;
-		display: block;
-		position: relative;
-		top: 50%;
-		background: url(../img/arrow_left.png) no-repeat;
-		cursor: pointer;
-	}
-	.RotatorPrevLink:hover span
-	{
-		/* background: url(../img/arrow_left2_hover.png) no-repeat; */
-	}
+		.RotatorPrevLink span
+		{
+			width: 65px;
+			height: 96px;
+			margin: -48px auto 0 auto;
+			display: block;
+			position: relative;
+			top: 50%;
+			background: url(../img/arrow_left.png) no-repeat;
+			cursor: pointer;
+		}
+		.RotatorPrevLink:hover span
+		{
+			/* background: url(../img/arrow_left2_hover.png) no-repeat; */
+		}
 	.RotatorNextLink
 	{
 		right: 0;
 	}
-	.RotatorNextLink span
-	{
-		width: 65px;
-		height: 96px;
-		margin: -48px auto 0 auto;
-		display: block;
-		position: relative;
-		top: 50%;
-		background: url(../img/arrow_right.png) no-repeat;
-		cursor: pointer;
-	}
-	.RotatorNextLink:hover span
-	{
-		/* background: url(../img/arrow_right2_hover.png) no-repeat; */
-	}
+		.RotatorNextLink span
+		{
+			width: 65px;
+			height: 96px;
+			margin: -48px auto 0 auto;
+			display: block;
+			position: relative;
+			top: 50%;
+			background: url(../img/arrow_right.png) no-repeat;
+			cursor: pointer;
+		}
+		.RotatorNextLink:hover span
+		{
+			/* background: url(../img/arrow_right2_hover.png) no-repeat; */
+		}
 	.Rotator
 	{
 		width: 100%;
 		height: 100%;
 		position: relative;
+		overflow:auto;
+		white-space: nowrap;
+		letter-spacing: -0.3em;
 	}
-		.RotatorItem
+		.RotatorContainer
 		{
-			width: 100%;
-			float: left;
+			max-width: 32766px; /* fu opera */
+			max-height: 500px;
 			position: relative;
-			text-align: center;
+			overflow: hidden;
+			text-align: left;
 		}
-		.RotatorItem img
-		{
-			max-width: 100%;
-			display: block;
-		}
-		.RotatorItem .Overlay
-		{
-			width: 100%;
-			height: 100%;
-			position: absolute;
-			top: 0;
-			left: 0;
-		}
-	.RotatorContainer
+			.RotatorItem
+			{
+				display: inline-block;
+				position: relative;
+				text-align: center;
+				overflow: hidden;
+				//zoom:1;
+			}
+				.RotatorItem img
+				{
+					max-width: 100%;
+					/*display: block;*/
+				}
+				.RotatorItem .Overlay
+				{
+					width: 100%;
+					height: 100%;
+					position: absolute;
+					top: 0;
+					left: 0;
+				}
+	.RotatorPaging a
 	{
-		max-width: 32767px; /* fu opera */
-		max-height: 500px;
-		position: relative;
-		overflow: hidden;
+		padding: 0 10px;
+		color: white;
+		font-family: Impact,sans-serif;
+		font-size: 16px;
+		text-decoration: none;
 	}
-.RotatorPaging a
-{
-	padding: 0 10px;
-	color: white;
-	font-family: Impact;
-	font-size: 16px;
-	text-decoration: none;
-}
-.RotatorPaging .Active
-{
-	color: #FF6633;
-	text-decoration: none;
-}
+	.RotatorPaging .Active
+	{
+		color: #FF6633;
+		text-decoration: none;
+	}

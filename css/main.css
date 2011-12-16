@@ -50,15 +50,13 @@ a:hover
 {
 	min-width: 768px;
 	margin: 0 auto;
-	position: relative;
-	outline: 1px solid red;
+	/*position: relative;*/
 }
 /*----------------------------------- Header --------------------------------*/
 .Header
 {
 	width: 100%;
 	margin: 0 auto;
-	outline: 1px solid grey;
 	overflow: hidden;
 	padding: 20px 0 0 0;
 }
@@ -77,15 +75,15 @@ a:hover
 /*----------------------------------- Content --------------------------------*/
 .Wrapper
 {
-	padding: 20px 35px 0px 50px;
+	/*padding: 20px 35px 0px 50px;*/
 	margin: 0 auto;
 	min-height: 360px;
 	font-size: 0.8em;
-	border-top: 1px solid #FFFFFF;
-	border: 1px solid grey;
 	/*background: #ddd;*/
+	position:relative;
+	overflow: hidden;
 }
 .Content
 {
-
+	position:relative;
 }

@@ -65,19 +65,23 @@ allowBreakpoints = false;
 			base.items_width = 100 / (4 * o.blocksPerScreen);
 
 			base.$items.each(function (i) { $(this).data('index', i + 1).attr("index", i + 1); })
-					   .css('width', base.items_width + '%')
-					   .wrapAll('<div style="width: ' + base.container_width + '%;' + '" class="' + base.containerName + '" />');
-			base.$container = base.$el.children(base.containerSelector);
+				.css('width', base.items_width + '%')
+				.wrapAll('<div style="width: ' + base.container_width+'%;' + '" class="'+base.containerName+'"/>');
+			base.$container = base.$el.find(base.containerSelector);
+			base.$el.css("overflow","hidden");
+			/*base.$el.parent().prepend( $("<a href=\"#\"><span>&nbsp;</span></a>").addClass("RotatorPrevLink").attr("id","RotatorPrevLink"),
+									   $("<a href=\"#\"><span>&nbsp;</span></a>").addClass("RotatorNextLink").attr("id","RotatorNextLink"));*/
 
 			if(base.page_count > 3) {		// сдвигаем массив слайдов так чтобы вначале стояли слайды с последней страницы
-				base.cycleItems(-o.blocksPerScreen);
-				base.$container.find(o.itemsSelector).remove();										// убираем в память все слайды
-				base.$container.append(base.items.slice(0, 3*o.blocksPerScreen));				// добавляем слайдов только на три страницы
+				base.rotateItems(o.startPage);
+				base.refreshSlider();
+				//base.$container.find(o.itemsSelector).remove();									// убираем в память все слайды
+				//base.$container.append(base.items.slice(0, 3*o.blocksPerScreen));				// добавляем слайдов только на три страницы
 				base.$container.css({ 'margin-left': -base.items_width * 4 * o.blocksPerScreen + '%' });
 			}
 
 			if (base.items_count <= o.blocksPerScreen) {
-				base.$el.addClass("static-rotator");
+				base.$el.addClass("not-enough-slides-static");
 				$(o.buttons_selector).hide();
 				$(o.navSelector).hide();
 			} else {
@@ -103,6 +107,12 @@ allowBreakpoints = false;
 					$(window).trigger('hashchange');
 				}
 			}
+			if (o.autoWidthCheck) {
+				var isOpera = !!$.browser.opera;
+				if(o.autoWidthCheck == "opera") {
+					if(isOpera) { base.checkResize(); }
+				} else { base.checkResize(); }
+			}
 		};
 
 		/* Обработчик изменения хэша страницы */
@@ -110,7 +120,7 @@ allowBreakpoints = false;
 			$(window).bind("hashchange", function(e) {
 				var page = e.getState(o.hashPrefix, true) || 1;
 				if (!base.animating) {
-					base.gotoPage('' + page);
+					base.gotoPage(page);
 				} else {
 					//console.log("сменился хэш, в то время как ротатор анимируется, игнор");
 				}
@@ -148,8 +158,9 @@ allowBreakpoints = false;
 		};
 		/* Инициализация навигационной панели */
 		base.buildNavigation = function() {
-			var page_count = base.page_count;	// выделил в отдельную переменную, чтобы в цикле не пересчитывалось
-			var pages_in_page, changeCount;
+			var page_count = base.page_count,
+				pages_in_page, changeCount,
+				navigation = $(o.navSelector);
 			for (var i = 0; i < page_count; i++) {
 				pages_in_page = [];
 				changeCount = o.blocksChangePerPage;
@@ -159,17 +170,18 @@ allowBreakpoints = false;
 				var nav_link = $(o.navPageTemplate.replace("$i", (i + 1))).data('page', i).data('items', pages_in_page).attr("title", "Нажмите для перехода на слайд "+(i+1));
 				if (o.hashPrefix) { nav_link.attr("href", "#" + o.hashPrefix + "=" + (i + 1)); }
 				if (o.navDrawPageNumber) { nav_link.text(i + 1); }
-				$(o.navSelector).append(nav_link);
+				navigation.append(nav_link);
 			}
-			$(o.navSelector).find('a').first().addClass('Active');
-			$(o.navSelector).delegate('a', 'click', function () {
+			navigation.find('a').first().addClass('Active');
+			navigation.delegate('a', 'click', function () {
 				if (base.animating || $(this).hasClass('Active')) {	return false; }
 				var target_page = $(this).data('items')[0];
-				$(this).addClass('Active').siblings().removeClass('Active');
-				if (o.hashPrefix) {
-					base.updateHashUrl(target_page);
-				}
-				base.gotoPage(target_page);
+				var pageIndex = (target_page-1)/o.blocksChangePerPage + 1;
+
+				navigation.removeClass('Active');
+				$(this).addClass('Active');
+				if (o.hashPrefix) { base.updateHashUrl(target_page); }
+				base.gotoPage(pageIndex);
 				return false;
 			});
 		};
@@ -193,12 +205,10 @@ allowBreakpoints = false;
 				base.timer = setTimeout(function() {
 					if (!base.animating) { base.goNextPage(); }
 				}, o.delay + o.duration);
-			} else {
-				base.clearTimer();
-			}
+			} else { base.clearTimer(); }
 		};
 		base.clearTimer = function() {
-			if (base.timer) { clearTimeout(base.timer); }			// Обнуляем таймер, если он был установлен
+			if (base.timer) { clearTimeout(base.timer); base.timer = null; }		// Обнуляем таймер, если он был установлен
 		};
 		/* Обновляет хэш адресной строки: префикс_ротатора=target_page */
 		base.updateHashUrl = function(target_page) {
@@ -209,8 +219,8 @@ allowBreakpoints = false;
 
 		/* Обновляет хэши у кнопок вперед/назад */
 		base.updateNextPrevLinks = function() {
-			var prev_index = getPrevPageIndex(base.currentPage, base.items_count),
-				next_index = getNextPageIndex(base.currentPage, base.items_count);
+			var prev_index = getPrevPageIndex(base.currentPage),
+				next_index = getNextPageIndex(base.currentPage);
 			$(o.prev).attr("href", "#" + o.hashPrefix + "=" + prev_index);
 			$(o.next).attr("href", "#" + o.hashPrefix + "=" + next_index);
 		};
@@ -257,51 +267,55 @@ allowBreakpoints = false;
 			base.clearTimer();
 
 			var value_right, step, is_prev,
-				need_rotators, next_rotators,
-				notFittedSlides   = null,
 				rotator_container = base.$container,
-				start_index       = base.currentPage,
-				current_rotator   = rotator_container.find(o.itemsSelector).filter(function() { return $(this).data("index") == start_index });
+				start_index       = base.currentPage;
 
 			if (end_index == 'prev' || end_index == 'next') {
-				step    = o.blocksChangePerPage;
-				is_prev = (end_index == 'prev');
-				end_index = parseInt( is_prev ? getPrevPageIndex(start_index, base.items_count) : getNextPageIndex(start_index, base.items_count), 10);
+				step      = o.blocksChangePerPage;
+				is_prev   = (end_index == 'prev');
+				end_index = parseInt( is_prev ? getPrevPageIndex(start_index) : getNextPageIndex(start_index), 10);
 			} else {
-				end_index = parseInt(end_index, 10);
-				step         = Math.abs(start_index - end_index);
+				//console.log(start_index);
+				//console.log(end_index);
+				//console.log(o.blocksChangePerPage);
+				step         = Math.abs(start_index - end_index) * o.blocksChangePerPage;
+				//console.log(step);
 				step         = (step > base.items_count / 2) ? base.items_count - step : step;
-				value_right  = (start_index + step) % base.items_count;
+				value_right  = ((start_index-1)*o.blocksChangePerPage + 1 + step) % base.items_count;
+				//console.log(value_right);
 				value_right  = (value_right == 0) ? base.items_count : value_right;
-				is_prev      = (value_right != end_index);
+				//console.log(value_right);
+				is_prev      = (value_right != (end_index-1)*o.blocksChangePerPage+1);
+				//console.log(is_prev);
 				if (step == base.items_count / 2) { is_prev = false; }
+				end_index    = parseInt(end_index, 10);
 			}
 			base.nextPage = end_index;
 			if (is_prev && step > o.blocksPerScreen) {		// будут "пропущены" слайды между экранами
 				rotator_container.find(o.itemsSelector).slice(-o.blocksPerScreen).remove();
-				base.cycleItems(null, end_index);
+				base.rotateItems((end_index-1)*o.blocksChangePerPage+1);
 
 				var slidesToAdd = base.items.slice(o.blocksPerScreen, 2*o.blocksPerScreen);
 				if (slidesToAdd.length == o.blocksPerScreen) {
 					rotator_container.prepend(slidesToAdd);
 					var notEnoughSlides = 3*o.blocksPerScreen - rotator_container.find(o.itemsSelector).length;
 					if (notEnoughSlides > 0) {
-						console.log(notEnoughSlides);
 						rotator_container.prepend(base.items.slice(o.blocksPerScreen-notEnoughSlides,2*o.blocksPerScreen-notEnoughSlides));
 					}
 					if (allowBreakpoints) debugger;
 				}
 				rotator_container.css('margin-left', -200 + '%');
 			} else if (!is_prev && step > 2*o.blocksPerScreen-1) {		// будут "пропущены" слайды между экранами
-				base.cycleItems(null, end_index);
+				base.rotateItems((end_index-1)*o.blocksChangePerPage+1);
 				rotator_container.find(o.itemsSelector).slice(0, o.blocksPerScreen).remove();
 
 				rotator_container.append(base.items.slice(o.blocksPerScreen, 2*o.blocksPerScreen));
 				rotator_container.css('margin-left', 0 + '%');
 				if (allowBreakpoints) debugger;
 			} else if (!is_prev && step > o.blocksPerScreen && step <= 2*o.blocksPerScreen) {
-				base.cycleItems( null, end_index );
+				base.rotateItems((end_index-1)*o.blocksChangePerPage+1);
 				var blocksToDel = Math.abs(step) % o.blocksPerScreen;
+
 				marginLeft = -100 + (is_prev ? -100 : 100)*(blocksToDel/o.blocksPerScreen);
 
 				rotator_container.find(o.itemsSelector).slice(0, blocksToDel).remove();
@@ -310,17 +324,19 @@ allowBreakpoints = false;
 				rotator_container.css('margin-left', marginLeft + '%');
 			} else {	// слайдимся по обычному
 				var marginLeft;
-				base.cycleItems( null, end_index );
+
+				base.rotateItems((end_index-1)*o.blocksChangePerPage+1);
 				marginLeft = -100 + (is_prev ? -100 : 100)*(step/o.blocksPerScreen);
 
-				rotator_container.find(o.itemsSelector).remove();
-				rotator_container.append(base.items.slice(0, 3 * o.blocksPerScreen));
+				base.refreshSlider();
+				//rotator_container.find(o.itemsSelector).remove();
+				//rotator_container.append(base.items.slice(0, 3 * o.blocksPerScreen));
 
 				rotator_container.css('margin-left', marginLeft + '%');
 				if (allowBreakpoints) debugger;
 			}
 			if (o.onBeforeAnimation && typeof(o.onBeforeAnimation) == 'function') {
-				o.onBeforeAnimation(current_page);
+				o.onBeforeAnimation(base.nextPage);
 			}
 			base.animateRotator(start_index, step, is_prev);
 			base.startStop();
@@ -334,109 +350,125 @@ allowBreakpoints = false;
 				duration: o.duration,
 				easing: o.easing,
 				complete: function () {
-					base.onAnimationComplete(is_prev, step);
+					base.onAnimationComplete();
 				}
 			});
 		};
-		base.onAnimationComplete = function(is_prev, step) {
+		base.onAnimationComplete = function() {
 			var rotator_container = base.$container,
 				$navlinks = $(o.navSelector).find('a');
 
-			rotator_container.find(o.itemsSelector).remove();
-			var slides = base.items.slice(0, 3*o.blocksPerScreen);
-			rotator_container.append(slides).css(base.after_animate_css);
+			base.refreshSlider();
+			rotator_container.css(base.after_animate_css);
 
-			base.cycleItems(null, base.nextPage);
+			base.rotateItems(base.nextPage*o.blocksChangePerPage);
 			base.currentPage = base.nextPage;
 
-			var current_page = base.currentPage;
-			if (o.navSelector) { $navlinks.removeClass('Active').eq(current_page-1).addClass("Active"); }
+			if (o.navSelector) { $navlinks.removeClass('Active').eq(base.currentPage-1).addClass("Active"); }
 			if (o.hashPrefix) { base.updateNextPrevLinks(); }
 			base.animating = false;
 			if (o.onMoveComplete && typeof(o.onMoveComplete) == 'function') {
-				o.onMoveComplete(current_page);
+				o.onMoveComplete(base.currentPage);
 			}
 		};
-
+		base.refreshSlider = function() {
+			base.$container.find(o.itemsSelector).remove();
+			base.$container.append(base.items.slice(0, 3*o.blocksPerScreen));
+		};
 		base.goNextPage = function() {
-			if (o.hashPrefix) { base.updateHashUrl(getNextPageIndex(base.currentPage, base.items_count)); }
+			if (o.hashPrefix) { base.updateHashUrl(getNextPageIndex(base.currentPage)); }
 			base.gotoPage('next');
 		};
 		base.goPrevPage = function() {
-			if (o.hashPrefix) {	base.updateHashUrl(getPrevPageIndex(base.currentPage, base.items_count)); }
+			if (o.hashPrefix) {	base.updateHashUrl(getPrevPageIndex(base.currentPage)); }
 			base.gotoPage('prev');
 		};
 		/* В разработке */
 		base.centerOnCurrentSlide = function() {
 			var distToCenter = 3;//Math.ceil(o.visibleCount/2) - 1;
-			var threshold = 1;									// по одному слайду слева и справа от центрального слайда можно нажимать без переключения ротатора
-			var currentPage = base.currentPage;
-			var centerSlide = currentPage + distToCenter;
+			var threshold    = 1;								// по одному слайду слева и справа от центрального слайда можно нажимать без переключения ротатора
+			var currentPage  = base.currentPage;
+			var centerSlide  = currentPage + distToCenter;
 			centerSlide = ( centerSlide > (base.items_count-1) || centerSlide < 1) ? Math.abs(base.items_count - Math.abs(centerSlide)) : centerSlide;
 
 			if ( currentPage < (centerSlide - threshold) || currentPage > (centerSlide + threshold)) {
 				var page_index = (currentPage > distToCenter) ?	(currentPage - distToCenter) : (base.items_count - Math.abs(currentPage - distToCenter));
-				base.gotoPage('' + page_index);
+				base.gotoPage(page_index);
 			}
 		};
-		base.cycleItems = function(diff, targetpage) {
+		base.rotateItems = function(targetpage) {
 			if (targetpage) {
 				var slidingDiff = targetpage - $(base.items.slice(o.blocksPerScreen,o.blocksPerScreen+1)).attr("index");
 				base.items.rotate(slidingDiff);
 			}
-		}
+		};
 
+		// Adjust slider dimensions on parent element resize
+		base.checkResize = function(stopTimer) {
+			clearTimeout(base.resizeTimer);
+			base.resizeTimer = setTimeout(function() {
+				var containerWidthCalc = base.$container.find(o.itemsSelector).first().width() * o.blocksPerScreen * 4,
+					containerWidthFact = base.$container.outerWidth(),
+					threshold          = 10; //на столько пикселей могут отличаться расчетная ширина и фактическая
+
+				if (containerWidthCalc > containerWidthFact+threshold ||
+					containerWidthCalc < containerWidthFact-threshold) {
+					base.$items.css("width",containerWidthFact / (4*o.blocksPerScreen) );
+				}
+				if (typeof(stopTimer) === 'undefined'){ base.checkResize(); }
+			}, 750);
+		};
+		function getPrevPageIndex(page_index) {
+			return (page_index > 1) ? (page_index - 1) : base.page_count;
+		}
+		function getNextPageIndex(page_index) {
+			return (page_index < base.page_count) ? (page_index + 1) : 1;
+		}
 		// Trigger the initialization
 		base.init();
 	};
 
 	$.rotator2.defaults = {
-		itemsSelector: '.RotatorItem',	// Селектор слайдов
-		prev: null,						// Селектор кнопки "Назад"
-		next: null,						// Селектор кнопки "Вперед"
+		itemsSelector:       ".RotatorItem",		// Селектор для слайдов
+		prev:                ".RotatorPrevLink",	// Селектор кнопки "Назад"
+		next:                ".RotatorNextLink",	// Селектор кнопки "Вперед"
 
-		blocksPerScreen: 1,				// Сколько блоков влазит на один экран
+		blocksPerScreen:     1,			// Сколько блоков влазит на один экран
 		blocksChangePerPage: 1,			// На сколько блоков передвигается ротатор при переключении на 1 страницу
-		duration: 1000,					// Скорость прокрутки одного слайда
-		easing: "swing",				// Эффекты переходов кроме "linear" или "swing" (т.е. нестандартные) требуют для работы easing-плагин
+		duration:            1000,		// Скорость прокрутки одного слайда
+		easing:              "swing",	// Эффекты переходов кроме "linear" или "swing" (т.е. нестандартные) требуют для работы easing-плагин
 
-		navSelector: null,				// Селектор для навигационного бара
-		navDrawPageNumber: false,		// Рисовать ли на кнопках нав. бара номера страниц
-		navPageTemplate: '<a href="#$n"><span>$i</span></a>', // Шаблон для кнопки в навигаторе
-		keyboardNavigation: false,		// Переключение слайдов по стрелкам клавиатуры. Больше одного на страницу врядли стоит делать.
+		navSelector:         null,		// Селектор для навигационного бара
+		navDrawPageNumber:   false,		// Рисовать ли на кнопках нав. бара номера страниц
+		navPageTemplate:     '<a href="#$n"><span>$i</span></a>', // Шаблон для кнопки в навигаторе
+		keyboardNavigation:  false,		// Переключение слайдов по стрелкам клавиатуры. Больше одного на страницу врядли стоит делать.
 
-		onBeforeAnimation: false,		// Функция, вызываемая прямо перед анимацией
-		onMoveComplete: false, 			// Функция, вызываемая после завершения анимации переключения слайдов
+		onBeforeAnimation:   false,		// Функция, вызываемая прямо перед анимацией
+		onMoveComplete:      false,		// Функция, вызываемая после завершения анимации переключения слайдов
 
-		autoPlay: false,				// Режим слайдшоу
-		delay: 6000, 					// Задержка между переключениями слайдов в режиме слайдшоу (без учета duration)
-		pauseOnHover: false,			// Ставить ротатор на паузу, когда мышь над ним. На айпаде нет ховера!
+		autoPlay:            false,		// Режим слайдшоу
+		delay:               6000, 		// Задержка между переключениями слайдов в режиме слайдшоу (без учета duration)
+		pauseOnHover:        false,		// Ставить ротатор на паузу, когда мышь над ним. На айпаде нет ховера!
 
-		useSwipeTouch: false,			// Прокрутка слайдов по тачпадовским жестам.
-		hashPrefix: false,				// Префикс на который ротатор будет отзываться, если указан
-		lazyLoad: false, 				// Загружать только слайд на который переходим, раньше работал только для 1 картинки на слайд
+		useSwipeTouch:       false,		// Прокрутка слайдов по тачпадовским жестам.
+		hashPrefix:          false,		// Хэш на который ротатор будет отзываться, если указан
+		lazyLoad:            false, 	// Загружать только слайд на который переходим, раньше работал только для 1 картинки на слайд
 
-		startPage: 1					//TODO C какой страницы начинать отображать слайдер
+		startPage:           1,			// C какой страницы начинать отображать слайдер
+		autoWidthCheck:      "opera"	// Слайдер будет расчитывать ширину слайдов в пикселях (спешал фор Опера)
 	};
-
-	function getPrevPageIndex(cur_page_index, page_count) {
-		return (cur_page_index > 1) ? (cur_page_index - 1) : page_count;
-	}
-	function getNextPageIndex(cur_page_index, page_count) {
-		return (cur_page_index < page_count) ? (cur_page_index + 1) : 1;
-	}
 	$.fn.rotator2 = function(options) {
 		// init slider
 		if ((typeof(options)).match('object|undefined')) {
 			return this.each(function() {
 				(new $.rotator2(this, options));
 			});
-		// If options is a number, process as an external link to page #: $(element).anythingSlider(#)
+		// If options is a number, process as an external link to page #: $(element).rotator2(#)
 		} else if (/\d/.test(options) && !isNaN(options)) {
 			return this.each(function() {
 				var founded_rotator = $.data(this,'rotator_link');
 				if (founded_rotator) {
-					var page = (typeof(options) == "number") ? options : parseInt($.trim(options),10); // accepts "  2  "
+					var page = (typeof(options) == "number") ? options : parseInt($.trim(options),10);
 					if ( page < 1 || page > founded_rotator.items_count ) { return; }
 					founded_rotator.gotoPage(page);
 				}
