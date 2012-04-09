@@ -275,18 +275,11 @@ allowBreakpoints = false;
 				is_prev   = (end_index == 'prev');
 				end_index = parseInt( is_prev ? getPrevPageIndex(start_index) : getNextPageIndex(start_index), 10);
 			} else {
-				//console.log(start_index);
-				//console.log(end_index);
-				//console.log(o.blocksChangePerPage);
 				step         = Math.abs(start_index - end_index) * o.blocksChangePerPage;
-				//console.log(step);
 				step         = (step > base.items_count / 2) ? base.items_count - step : step;
 				value_right  = ((start_index-1)*o.blocksChangePerPage + 1 + step) % base.items_count;
-				//console.log(value_right);
 				value_right  = (value_right == 0) ? base.items_count : value_right;
-				//console.log(value_right);
 				is_prev      = (value_right != (end_index-1)*o.blocksChangePerPage+1);
-				//console.log(is_prev);
 				if (step == base.items_count / 2) { is_prev = false; }
 				end_index    = parseInt(end_index, 10);
 			}
@@ -304,7 +297,8 @@ allowBreakpoints = false;
 					}
 					if (allowBreakpoints) debugger;
 				}
-				rotator_container.css('margin-left', -200 + '%');
+				var extraBlocks = 3*o.blocksPerScreen - rotator_container.find(o.itemsSelector).length;
+				rotator_container.css('margin-left', -200-100*(extraBlocks/o.blocksPerScreen) + '%');
 			} else if (!is_prev && step > 2*o.blocksPerScreen-1) {		// будут "пропущены" слайды между экранами
 				base.rotateItems((end_index-1)*o.blocksChangePerPage+1);
 				rotator_container.find(o.itemsSelector).slice(0, o.blocksPerScreen).remove();
@@ -316,28 +310,24 @@ allowBreakpoints = false;
 				base.rotateItems((end_index-1)*o.blocksChangePerPage+1);
 				var blocksToDel = Math.abs(step) % o.blocksPerScreen;
 
-				marginLeft = -100 + (is_prev ? -100 : 100)*(blocksToDel/o.blocksPerScreen);
-
+				var toDel = rotator_container.find(o.itemsSelector).slice(0, blocksToDel);
 				rotator_container.find(o.itemsSelector).slice(0, blocksToDel).remove();
-				rotator_container.append(base.items.slice(o.blocksPerScreen, 2*o.blocksPerScreen));
+				rotator_container.append( toDel );
 
+				var marginLeft = -100 + (is_prev ? -100 : 100)*(blocksToDel/o.blocksPerScreen);
 				rotator_container.css('margin-left', marginLeft + '%');
 			} else {	// слайдимся по обычному
-				var marginLeft;
-
 				base.rotateItems((end_index-1)*o.blocksChangePerPage+1);
-				marginLeft = -100 + (is_prev ? -100 : 100)*(step/o.blocksPerScreen);
-
 				base.refreshSlider();
-				//rotator_container.find(o.itemsSelector).remove();
-				//rotator_container.append(base.items.slice(0, 3 * o.blocksPerScreen));
 
+				var marginLeft = -100 + (is_prev ? -100 : 100)*(step/o.blocksPerScreen);
 				rotator_container.css('margin-left', marginLeft + '%');
 				if (allowBreakpoints) debugger;
 			}
 			if (o.onBeforeAnimation && typeof(o.onBeforeAnimation) == 'function') {
 				o.onBeforeAnimation(base.nextPage);
 			}
+			
 			base.animateRotator(start_index, step, is_prev);
 			base.startStop();
 		};
