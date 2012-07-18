@@ -1,107 +1,43 @@
-function getCookie(name) {
-    var cookieValue = null;
-    if (document.cookie && document.cookie != '') {
-        var cookies = document.cookie.split(';');
-        for (var i = 0; i < cookies.length; i++) {
-            var cookie = jQuery.trim(cookies[i]);
-            // Does this cookie string begin with the name we want?
-            if (cookie.substring(0, name.length + 1) == (name + '=')) {
-                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                break;
-            }
-        }
-    }
-    return cookieValue;
-}
-function deserialize(str) {
-    var href = str,
-        last_index = href.lastIndexOf("?"),
-        result = {};
-    if (last_index > -1) {
-        href = href.substr(last_index + 1);
-    }
-    var data = href.split("&")
-    for (var i = 0; i < data.length; i++) {
-        if (!data[i]) continue;
-        var pair = decodeURIComponent(data[i]).split("=");
-        if (pair.length != 2) continue;
-        var _name = pair[0];
-        var value = pair[1];
-        result[_name] = value;
-    }
-    return result;
-}
-$.ajaxSetup({
-	cache: false,
-	type: 'POST',
-	dataType: 'html',
-	beforeSend: function(xhr, settings) {
-		if (!(/^http:.*/.test(settings.url) || /^https:.*/.test(settings.url))) {
-			xhr.setRequestHeader("X-CSRFToken", getCookie('csrftoken'));
-		}
-	}
-});
-
 $(document).ready(function() {
-	$("#Rotator").rotator2({
-		"itemsSelector": '.RotatorItem',
-		'prev': '#RotatorPrevLink',
-		'next': '#RotatorNextLink',
-		"blocksPerScreen": 1,
-		"blocksChangePerPage": 1,
-		//'autoPlay': true,
-		'keyboardNavigation': true
+	$("#b-rotator").rotator2({
+		itemsSelector:       '.b-rotator__item',
+		prev:                '#b-rotator__prev',
+		next:                '#b-rotator__next',
+		blocksPerScreen:     1,
+		blocksChangePerPage: 1,
+		autoPlay:            true,
+		keyboardNavigation:  true,
+		containerOverflow:   'visible'
 	});
-	$("#RotatorWithHashes").rotator2({
-		"itemsSelector": '.RotatorItem',
-		'prev': '#RotatorPrevLink',
-		'next': '#RotatorNextLink',
-		"blocksPerScreen": 1,
-		"blocksChangePerPage": 1,
-		'hashPrefix': "slide",
-		//'autoPlay': true,
-		'easing': "easeOutQuad",
-		'keyboardNavigation': false,
-		"navSelector": '#RotatorPaging',
-        'navPageTemplate': '<a href="#"><span>$i</span></a>'
+	$("#b-rotator-hashes").rotator2({
+		itemsSelector:       '.b-rotator__item',
+		prev:                '#b-rotator__prev',
+		next:                '#b-rotator__next',
+		blocksPerScreen:     1,
+		blocksChangePerPage: 1,
+		hashPrefix:          "slide",
+		//'autoPlay: true,
+		easing:              "easeOutQuad",
+		keyboardNavigation:  false,
+		navSelector:         '#b-rotator__paging',
+		navPageTemplate:     '<a href="#"><span>$i</span></a>'
 	});
 	$("#RotatorWithHashesAndMultipleBlocks").rotator2({
-		itemsSelector:       '.RotatorItem',
-		prev:                '#RotatorPrevLink',
-		next:                '#RotatorNextLink',
+		itemsSelector:       '.b-rotator__item',
+		prev:                '#b-rotator__prev',
+		next:                '#b-rotator__next',
 		blocksPerScreen:     4,
 		blocksChangePerPage: 2,
 		hashPrefix:          "slide",
 		//'autoPlay':        true,
 		keyboardNavigation:  false,
-		navSelector:         '#RotatorPaging',
-        navPageTemplate:     '<a href="#"><span>$i</span></a>',
+		navSelector:         '#b-rotator__paging',
+		navPageTemplate:     '<a href="#"><span>$i</span></a>',
 		autoWidthCheck:      'opera'/*,
 		onMoveComplete:      function(index){
 			testarray=[];
-			$("#RotatorWithHashesAndMultipleBlocks").find(".RotatorItem").each(function() { testarray.push($(this).attr("index")); })
+			$("#RotatorWithHashesAndMultipleBlocks").find(".b-rotator__item").each(function() { testarray.push($(this).attr("index")); })
 			$("#result").html("Result array: "+testarray.slice(0,3).toString()+",<span style=\"color:red;\">"+testarray[3]+"</span>," + testarray.slice(4).toString() );
 		}*/
 	});
-	var testarray = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20];
-	
-	$("#tester").click(function() {
-		var diff = parseInt( $("#wtf").val(), 10) ;
-		cycleItems( diff );
-		$("#result").html( "rotated by " + diff + ". Result array: "+testarray.slice(0,3).toString()+",<span style=\"color:red;\">"+testarray[3]+"</span>," + testarray.slice(4).toString() );
-	})
-	$("#target-tester").click(function() {
-		var targetPage = parseInt( $("#target-wtf").val(), 10) ;
-		cycleItems( null, targetPage );
-		$("#target-result").html( "rotated to page " + targetPage + ". Result array: "+testarray.slice(0,3).toString()+",<span style=\"color:red;\">"+testarray[3]+"</span>," + testarray.slice(4).toString() );
-	})
-	function cycleItems(diff, targetpage) {
-		if (targetpage) {
-			var slidingDiff = targetpage - testarray.slice(3,4);
-			console.log(testarray.slice(3,4));
-			testarray.rotate(slidingDiff);
-		} else {
-			testarray.rotate(diff);
-		}
-	}
 });

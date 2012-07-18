@@ -27,10 +27,10 @@ Rotator - слайдер-монстер на jQuery
 
 ``` javascript
 $(document).ready(function() {
- $("#Rotator").rotator2({
-  itemsSelector: '.RotatorItem',
-  prev: '#RotatorPrevLink',
-  next: '#RotatorNextLink',
+ $("#b-rotator").rotator2({
+  itemsSelector: '.b-rotator__item',
+  prev: '#b-rotator__prev',
+  next: '#b-rotator__next',
   blocksPerScreen: 1,
   blocksChangePerPage: 1,
   //hashPrefix: "slide",
@@ -41,9 +41,9 @@ $(document).ready(function() {
 });
 ```
 
-где #Rotator - блок внутри которого находятся слайды,
-.RotatorItem - селектор слайдов,
- #RotatorPrevLink,#RotatorNextLink - селекторы кнопок для переключения слайдов
+где #b-rotator - блок внутри которого находятся слайды,
+.b-rotator - селектор слайдов,
+ #b-rotator__prev,#b-rotator__next - селекторы кнопок для переключения слайдов
 
 
 Баг-трекер
