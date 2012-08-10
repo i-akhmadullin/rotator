@@ -12,19 +12,7 @@
 *  $('#slider1').data('rotator_link').goNextPage();			// переключить на след слайд
 *  $('#slider1').data('rotator_link').goPrevPage();			// вернутся на пред слайд
 */
-;Array.prototype.rotate = (function() {
-	var push = Array.prototype.push, splice = Array.prototype.splice;
-	return function(count) {
-		var len = this.length >>> 0, // convert to uint
-			count = count >> 0; // convert to int
-		// convert count to value in range [0, len[
-		count = ((count % len) + len) % len;
-		push.apply(this, splice.call(this, 0, count));
-		return this;
-	};
-})();
-
-(function ($) {
+;(function ($) {
 	$.rotator2 = function(el, options) {
 
 		var base = this, o; // o - это настройки
@@ -385,7 +373,8 @@
 		base.rotateItems = function(targetpage) {
 			if (targetpage) {
 				var slidingDiff = targetpage - $(base.items.slice(o.blocksPerScreen,o.blocksPerScreen+1)).attr("index");
-				base.items.rotate(slidingDiff);
+
+				base.items.rotateArray(base.items, slidingDiff);
 			}
 		};
 
@@ -409,6 +398,9 @@
 		}
 		function getNextPageIndex(page_index) {
 			return (page_index < base.page_count) ? (page_index + 1) : 1;
+		}
+		function rotateArray(arr, n) {
+			return arr.slice(n, arr.length).concat(arr.slice(0, n));
 		}
 		// Trigger the initialization
 		base.init();
