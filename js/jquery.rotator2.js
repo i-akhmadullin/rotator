@@ -8,9 +8,9 @@
 *    $('#slider2').rotator2(4);
 *  });
 *
-*  Управление слайдером
-*  $('#slider1').data('rotator_link').goNextPage();			// переключить на след слайд
-*  $('#slider1').data('rotator_link').goPrevPage();			// вернутся на пред слайд
+*  Управление режимом слайдшоу
+*  $('#slider1').data('rotator_link').goNextPage();	// переключить на след слайд
+*  $('#slider1').data('rotator_link').goPrevPage();	// вернутся на пред слайд
 */
 ;(function ($) {
 	$.rotator2 = function(el, options) {
@@ -20,10 +20,10 @@
 		base.$el.data("rotator_link", base);
 
 		base.currentPage = 1;
-		base.timer       = null;				// Таймер, автоматически переключает слайды
-		base.animating   = false;				// Индикатор того, что ротатор в процессе анимации между слайдами
-		base.playing     = false;				// Индикатор активности режима слайдшоу
-		base.items       = [];					// Массив слайдов
+		base.timer       = null;	// Таймер, автоматически переключает слайды
+		base.animating   = false;	// Индикатор того, что ротатор в процессе анимации между слайдами
+		base.playing     = false;	// Внутренний индикатор активности режима слайдшоу
+		base.items       = [];		// Массив слайдов
 
 		base.init = function() {
 
@@ -34,20 +34,20 @@
 			base.items  = base.$items.toArray();
 
 			base.items_count       = base.$items.length;
-			base.containerName     = o.containerClass;
-			base.containerSelector = "." + base.containerName;  // Селектор для контейнера
+			base.containerName     = "b-rotator__container";											// В контейнер с таким классом будут обёрнуты все слайды
+			base.containerSelector = "." + base.containerName;										// Селектор для контейнера
 			base.after_animate_css = { 'margin-left': "-100%", 'left': 0 };
 
 			var buttons_array = [];
 			if (o.prev) { buttons_array.push(o.prev); }
 			if (o.next) { buttons_array.push(o.next); }
-			o.buttons_selector = buttons_array.join(', ');  // объединили CSS-селекторы кнопок "вперед" и "назад" в единый селектор
+			o.buttons_selector = buttons_array.join(', ');		// объединили CSS-селекторы кнопок "вперед" и "назад" в единый селектор
 
 			if (o.blocksPerScreen > o.items_count) { o.blocksPerScreen = base.items_count; }
 			if (!$.isFunction( $.easing[o.easing] )) { o.easing = "swing"; }
 
-			base.page_count = Math.ceil(base.items_count / o.blocksChangePerPage);  // кол-во страниц слайдера = кол-во слайдов / сколько менять за 1 экран
-			base.block_count = Math.ceil(base.items_count / o.blocksPerScreen) + 1;  // кол-во блоков = кол-во слайдов / сколько влазит на страницу
+			base.page_count = Math.ceil(base.items_count / o.blocksChangePerPage);							// кол-во страниц слайдера = кол-во слайдов / сколько менять за 1 экран
+			base.block_count = Math.ceil(base.items_count / o.blocksPerScreen) + 1;					// кол-во блоков = кол-во слайдов / сколько влазит на страницу
 			base.container_width = 100 * 4;
 			base.items_width = 100 / (4 * o.blocksPerScreen);
 
@@ -55,15 +55,15 @@
 				.css('width', base.items_width + '%')
 				.wrapAll('<div style="width: ' + base.container_width+'%;' + '" class="'+base.containerName+'"/>');
 			base.$container = base.$el.find(base.containerSelector);
-			base.$el.css("overflow", o.containerOverflow);
+			base.$el.css("overflow","hidden");
 			/*base.$el.parent().prepend( $("<a href=\"#\"><span>&nbsp;</span></a>").addClass("RotatorPrevLink").attr("id","RotatorPrevLink"),
 				$("<a href=\"#\"><span>&nbsp;</span></a>").addClass("RotatorNextLink").attr("id","RotatorNextLink"));*/
 
-			if(base.page_count > 3) {  // сдвигаем массив слайдов так чтобы вначале стояли слайды с последней страницы
+			if(base.page_count > 3) {	// сдвигаем массив слайдов так чтобы вначале стояли слайды с последней страницы
 				base.rotateItems(o.startPage);
 				base.refreshSlider();
-				//base.$container.find(o.itemsSelector).remove();  // убираем в память все слайды
-				//base.$container.append(base.items.slice(0, 3*o.blocksPerScreen));  // добавляем слайдов только на три страницы
+				//base.$container.find(o.itemsSelector).remove();								// убираем в память все слайды
+				//base.$container.append(base.items.slice(0, 3*o.blocksPerScreen));				// добавляем слайдов только на три страницы
 				base.$container.css({ 'margin-left': -base.items_width * 4 * o.blocksPerScreen + '%' });
 			}
 
@@ -147,14 +147,14 @@
 		base.buildNavigation = function() {
 			var page_count = base.page_count,
 				pages_in_page, changeCount,
-				navigation = $(o.navSelector);
+				navigation = base.$el.parent().find(o.navSelector);
 			for (var i = 0; i < page_count; i++) {
 				pages_in_page = [];
 				changeCount = o.blocksChangePerPage;
 				for (var j = i * changeCount + 1; j < ((i + 1) * changeCount + 1); j++) {
 					pages_in_page.push(j);
 				}
-				var nav_link = $(o.navPageTemplate.replace("$i", (i + 1))).data('page', i).data('items', pages_in_page).attr("title", "Нажмите для перехода на слайд "+(i+1));
+				var nav_link = $(o.navPageTemplate.replace("$i", (i + 1))).data('page', i).data('items', pages_in_page);
 				if (o.hashPrefix) { nav_link.attr("href", "#" + o.hashPrefix + "=" + (i + 1)); }
 				if (o.navDrawPageNumber) { nav_link.text(i + 1); }
 				navigation.append(nav_link);
@@ -265,7 +265,7 @@
 				step         = Math.abs(start_index - end_index) * o.blocksChangePerPage;
 				step         = (step > base.items_count / 2) ? base.items_count - step : step;
 				value_right  = ((start_index-1)*o.blocksChangePerPage + 1 + step) % base.items_count;
-				value_right  = (value_right === 0) ? base.items_count : value_right;
+				value_right  = (value_right == 0) ? base.items_count : value_right;
 				is_prev      = (value_right != (end_index-1)*o.blocksChangePerPage+1);
 				if (step == base.items_count / 2) { is_prev = false; }
 				end_index    = parseInt(end_index, 10);
@@ -330,7 +330,7 @@
 		};
 		base.onAnimationComplete = function() {
 			var rotator_container = base.$container,
-				$navlinks = $(o.navSelector).find('a');
+				$navlinks = base.$el.parent().find(o.navSelector).find('a');
 
 			base.refreshSlider();
 			rotator_container.css(base.after_animate_css);
@@ -359,8 +359,8 @@
 		};
 		/* В разработке */
 		base.centerOnCurrentSlide = function() {
-			var distToCenter = 3;  //Math.ceil(o.visibleCount/2) - 1;
-			var threshold    = 1;  // по одному слайду слева и справа от центрального слайда можно нажимать без переключения ротатора
+			var distToCenter = 3;//Math.ceil(o.visibleCount/2) - 1;
+			var threshold    = 1;								// по одному слайду слева и справа от центрального слайда можно нажимать без переключения ротатора
 			var currentPage  = base.currentPage;
 			var centerSlide  = currentPage + distToCenter;
 			centerSlide = ( centerSlide > (base.items_count-1) || centerSlide < 1) ? Math.abs(base.items_count - Math.abs(centerSlide)) : centerSlide;
@@ -373,8 +373,7 @@
 		base.rotateItems = function(targetpage) {
 			if (targetpage) {
 				var slidingDiff = targetpage - $(base.items.slice(o.blocksPerScreen,o.blocksPerScreen+1)).attr("index");
-
-				base.items.rotateArray(base.items, slidingDiff);
+				base.items = rotateArray( base.items, slidingDiff );
 			}
 		};
 
@@ -407,34 +406,33 @@
 	};
 
 	$.rotator2.defaults = {
-		itemsSelector:       ".b-rotator__item",        // Селектор для слайдов
-		prev:                ".b-rotator__prev",        // Селектор кнопки "Назад"
-		next:                ".b-rotator__next",        // Селектор кнопки "Вперед"
-		containerClass:      "b-rotator__container",    // В контейнер с таким классом будут обёрнуты все слайды
-		blocksPerScreen:     1,         // Сколько блоков влазит на один экран
-		blocksChangePerPage: 1,         // На сколько блоков передвигается ротатор при переключении на 1 страницу
-		duration:            1000,      // Скорость прокрутки одного слайда
-		easing:              "swing",   // Эффекты переходов кроме "linear" или "swing" (т.е. нестандартные) требуют для работы easing-плагин
-		containerOverflow:   "hidden",    // Overflow для контейнера, "visible" - показывать пред и последующие слайды
+		itemsSelector:       ".RotatorItem",		// Селектор для слайдов
+		prev:                ".RotatorPrevLink",	// Селектор кнопки "Назад"
+		next:                ".RotatorNextLink",	// Селектор кнопки "Вперед"
 
-		navSelector:         null,      // Селектор для навигационного бара
-		navDrawPageNumber:   false,     // Рисовать ли на кнопках нав. бара номера страниц
+		blocksPerScreen:     1,			// Сколько блоков влазит на один экран
+		blocksChangePerPage: 1,			// На сколько блоков передвигается ротатор при переключении на 1 страницу
+		duration:            1000,		// Скорость прокрутки одного слайда
+		easing:              "swing",	// Эффекты переходов кроме "linear" или "swing" (т.е. нестандартные) требуют для работы easing-плагин
+
+		navSelector:         null,		// Селектор для навигационного бара
+		navDrawPageNumber:   false,		// Рисовать ли на кнопках нав. бара номера страниц
 		navPageTemplate:     '<a href="#$n"><span>$i</span></a>', // Шаблон для кнопки в навигаторе
-		keyboardNavigation:  false,     // Переключение слайдов по стрелкам клавиатуры. Больше одного на страницу врядли стоит делать.
+		keyboardNavigation:  false,		// Переключение слайдов по стрелкам клавиатуры. Больше одного на страницу врядли стоит делать.
 
-		onBeforeAnimation:   false,     // Функция, вызываемая прямо перед анимацией
-		onMoveComplete:      false,     // Функция, вызываемая после завершения анимации переключения слайдов
+		onBeforeAnimation:   false,		// Функция, вызываемая прямо перед анимацией
+		onMoveComplete:      false,		// Функция, вызываемая после завершения анимации переключения слайдов
 
-		autoPlay:            false,     // Режим слайдшоу
-		delay:               6000,      // Задержка между переключениями слайдов в режиме слайдшоу (без учета duration)
-		pauseOnHover:        false,     // Ставить ротатор на паузу, когда мышь над ним. На айпаде нет ховера!
+		autoPlay:            false,		// Режим слайдшоу
+		delay:               6000, 		// Задержка между переключениями слайдов в режиме слайдшоу (без учета duration)
+		pauseOnHover:        false,		// Ставить ротатор на паузу, когда мышь над ним. На айпаде нет ховера!
 
-		useSwipeTouch:       false,     // Прокрутка слайдов по тачпадовским жестам.
-		hashPrefix:          false,     // Хэш на который ротатор будет отзываться, если указан
-		lazyLoad:            false,     // Загружать только слайд на который переходим, раньше работал только для 1 картинки на слайд
+		useSwipeTouch:       false,		// Прокрутка слайдов по тачпадовским жестам.
+		hashPrefix:          false,		// Хэш на который ротатор будет отзываться, если указан
+		lazyLoad:            false, 	// Загружать только слайд на который переходим, раньше работал только для 1 картинки на слайд
 
-		startPage:           1,         // C какой страницы начинать отображать слайдер
-		autoWidthCheck:      "opera"    // Слайдер будет расчитывать ширину слайдов в пикселях (спешал фор Опера)
+		startPage:           1,			// C какой страницы начинать отображать слайдер
+		autoWidthCheck:      "opera"	// Слайдер будет расчитывать ширину слайдов в пикселях (спешал фор Опера)
 	};
 	$.fn.rotator2 = function(options) {
 		// init slider
@@ -445,9 +443,9 @@
 		// If options is a number, process as an external link to page #: $(element).rotator2(#)
 		} else if (/\d/.test(options) && !isNaN(options)) {
 			return this.each(function() {
-				var founded_rotator = $.data(this, 'rotator_link');
+				var founded_rotator = $.data(this,'rotator_link');
 				if (founded_rotator) {
-					var page = (typeof(options) == "number") ? options : parseInt($.trim(options), 10);
+					var page = (typeof(options) == "number") ? options : parseInt($.trim(options),10);
 					if ( page < 1 || page > founded_rotator.items_count ) { return; }
 					founded_rotator.gotoPage(page);
 				}
