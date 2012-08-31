@@ -55,7 +55,7 @@
 				.css('width', base.items_width + '%')
 				.wrapAll('<div style="width: ' + base.container_width+'%;' + '" class="'+base.containerName+'"/>');
 			base.$container = base.$el.find(base.containerSelector);
-			base.$el.css("overflow","hidden");
+			base.$el.css("overflow", o.containerOverflow);
 			/*base.$el.parent().prepend( $("<a href=\"#\"><span>&nbsp;</span></a>").addClass("RotatorPrevLink").attr("id","RotatorPrevLink"),
 				$("<a href=\"#\"><span>&nbsp;</span></a>").addClass("RotatorNextLink").attr("id","RotatorNextLink"));*/
 
@@ -345,9 +345,17 @@
 				o.onMoveComplete(base.currentPage);
 			}
 		};
-		base.refreshSlider = function() {
+		base.refreshSlider = function () {
+			base.$container.find(o.itemsSelector).remove();
+			base.$container.append(base.items.slice(0, 3 * o.blocksPerScreen));
+			if (base.items.length < 3 * o.blocksPerScreen) {
+				$(base.items.slice(0, o.blocksPerScreen)).clone()
+					.appendTo(base.$container);
+			}
 			base.$container.find(o.itemsSelector).remove();
 			base.$container.append(base.items.slice(0, 3*o.blocksPerScreen));
+		};
+		base.refreshSlider = function() {
 		};
 		base.goNextPage = function() {
 			if (o.hashPrefix) { base.updateHashUrl(getNextPageIndex(base.currentPage)); }
@@ -406,9 +414,9 @@
 	};
 
 	$.rotator2.defaults = {
-		itemsSelector:       ".RotatorItem",		// Селектор для слайдов
-		prev:                ".RotatorPrevLink",	// Селектор кнопки "Назад"
-		next:                ".RotatorNextLink",	// Селектор кнопки "Вперед"
+		itemsSelector:       ".b-rotator__item",		// Селектор для слайдов
+		prev:                ".b-rotator__prev",	// Селектор кнопки "Назад"
+		next:                ".b-rotator__next",	// Селектор кнопки "Вперед"
 
 		blocksPerScreen:     1,			// Сколько блоков влазит на один экран
 		blocksChangePerPage: 1,			// На сколько блоков передвигается ротатор при переключении на 1 страницу
@@ -443,11 +451,11 @@
 		// If options is a number, process as an external link to page #: $(element).rotator2(#)
 		} else if (/\d/.test(options) && !isNaN(options)) {
 			return this.each(function() {
-				var founded_rotator = $.data(this,'rotator_link');
-				if (founded_rotator) {
+				var rotator = $.data(this, 'rotator_link');
+				if (rotator) {
 					var page = (typeof(options) == "number") ? options : parseInt($.trim(options),10);
 					if ( page < 1 || page > founded_rotator.items_count ) { return; }
-					founded_rotator.gotoPage(page);
+					rotator.gotoPage(page);
 				}
 			});
 		}
