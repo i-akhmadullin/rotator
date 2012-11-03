@@ -1,19 +1,19 @@
 .b-rotator-wrapper {
 	position: relative;
-	overflow: hidden;
-	margin: 0 auto;
+	/* overflow: hidden; */
+	margin: 10px auto 40px;
 	min-height: 40px;
-	background: #293135;
 	text-align: center;
 }
 	.b-rotator__prev,
 	.b-rotator__next {
 		position: absolute;
-		top: 10%;
+		top: 0;
 		z-index: 5;
 		display: block;
-		width: 85px;
-		height: 80%;
+		width: 60px;
+		height: 100%;
+		background: rgba(0,0,0,0.1);
 		text-decoration: none;
 	}
 	.b-rotator__prev {
@@ -32,6 +32,17 @@
 		.b-rotator__prev:hover span {
 			/* background: url(../img/arrow_left2_hover.png) no-repeat; */
 		}
+	.b-rotator__prev_wide {
+		left: -100%;
+		width: 100%;
+		background: none;
+	}
+	.b-rotator__prev_wide:hover{
+		background: rgba(0,0,0,0.1);
+	}
+	.b-rotator__prev_wide span {
+		margin-right: 10%;
+	}
 	.b-rotator__next {
 		right: 0;
 	}
@@ -48,6 +59,17 @@
 		.b-rotator__next:hover span {
 			/* background: url(../img/arrow_right2_hover.png) no-repeat; */
 		}
+	.b-rotator__next_wide {
+		right: -100%;
+		width: 100%;
+		background: none;
+	}
+	.b-rotator__next_wide:hover{
+		background: rgba(0,0,0,0.1);
+	}
+	.b-rotator__next_wide span {
+		margin-left: 10%;
+	}
 	.b-rotator {
 		position: relative;
 		overflow:auto;
@@ -58,8 +80,8 @@
 	}
 		.b-rotator__container {
 			position: relative;
-			overflow: hidden;
-			max-width: 32766px; /* fu opera */
+			/* overflow: hidden; */
+			max-width: 32766px; /* opera */
 			max-height: 500px;
 			text-align: left;
 		}
@@ -75,22 +97,25 @@
 					/* display: block; */
 					max-width: 100%;
 				}
-				.b-rotator__item .Overlay {
-					position: absolute;
-					top: 0;
-					left: 0;
-					width: 100%;
-					height: 100%;
-				}
 
 .b-rotator__paging a {
 	padding: 0 10px;
-	color: white;
 	text-decoration: none;
-	font-size: 16px;
-	font-family: Impact,sans-serif;
+	font-size: 12px;
+}
+.b-rotator__paging_mod {
+	position: absolute;
+	bottom: -20px;
+	left: 50%;
+	margin-left: -50%;
+	width: 100%;
 }
 .b-rotator__paging .Active {
-	color: #FF6633;
 	text-decoration: none;
+	color: #FF6633;
+	font-weight: bold;
+}
+.b-rotator__paging span:hover{
+	color: #FF6633;
+	text-decoration: underline;
 }
