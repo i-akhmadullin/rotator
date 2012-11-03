@@ -26,7 +26,6 @@
 
         base.init = function() {
             if (base.$el.data("rotator")) {
-                console.log( 'fu' );
                 return false;
             }
             base.$el.data("rotator", base);
