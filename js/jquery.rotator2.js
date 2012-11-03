@@ -17,7 +17,6 @@
 
         var base = this, o; // o - это настройки
         base.$el = $(el);
-        base.$el.data("rotator", base);
 
         base.currentPage = 1;
         base.timer       = null;    // Таймер, автоматически переключает слайды
@@ -26,6 +25,11 @@
         base.items       = [];      // Массив слайдов
 
         base.init = function() {
+            if (base.$el.data("rotator")) {
+                console.log( 'fu' );
+                return false;
+            }
+            base.$el.data("rotator", base);
 
             base.options = o = $.extend({},$.rotator2.defaults, options);
             if (o.blocksChangePerPage > o.blocksPerScreen) { o.blocksChangePerPage = o.blocksPerScreen; }
