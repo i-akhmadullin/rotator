@@ -38,19 +38,20 @@
 
             base.items_count       = base.$items.length;
             base.containerName     = "b-rotator__container";                                            // В контейнер с таким классом будут обёрнуты все слайды
-            base.containerSelector = "." + base.containerName;                                      // Селектор для контейнера
+            base.containerSelector = "." + base.containerName;
             base.after_animate_css = { 'margin-left': "-100%", 'left': 0 };
+            base.wrapper = base.$el.closest('.b-rotator-wrapper');
 
             var buttons_array = [];
             if (o.prev) { buttons_array.push(o.prev); }
             if (o.next) { buttons_array.push(o.next); }
-            o.buttons_selector = buttons_array.join(', ');      // объединили CSS-селекторы кнопок "вперед" и "назад" в единый селектор
+            o.buttons_selector = buttons_array.join(', ');
 
             if (o.blocksPerScreen > o.items_count) { o.blocksPerScreen = base.items_count; }
             if (!$.isFunction( $.easing[o.easing] )) { o.easing = "swing"; }
 
-            base.page_count = Math.ceil(base.items_count / o.blocksChangePerPage);                          // кол-во страниц слайдера = кол-во слайдов / сколько менять за 1 экран
-            base.block_count = Math.ceil(base.items_count / o.blocksPerScreen) + 1;                 // кол-во блоков = кол-во слайдов / сколько влазит на страницу
+            base.page_count = Math.ceil(base.items_count / o.blocksChangePerPage);         // кол-во страниц слайдера = кол-во слайдов / сколько менять за 1 экран
+            base.block_count = Math.ceil(base.items_count / o.blocksPerScreen) + 1;        // кол-во блоков = кол-во слайдов / сколько влазит на страницу
             base.container_width = 100 * 4;
             base.items_width = 100 / (4 * o.blocksPerScreen);
 
@@ -59,21 +60,19 @@
                 .wrapAll('<div style="width: ' + base.container_width+'%;' + '" class="'+base.containerName+'"/>');
             base.$container = base.$el.find(base.containerSelector);
             base.$el.css("overflow", o.containerOverflow);
-            /*base.$el.parent().prepend( $("<a href=\"#\"><span>&nbsp;</span></a>").addClass("RotatorPrevLink").attr("id","RotatorPrevLink"),
-                $("<a href=\"#\"><span>&nbsp;</span></a>").addClass("RotatorNextLink").attr("id","RotatorNextLink"));*/
+            /*base.$el.parent().prepend( $("<a href=\"#\"><span>&nbsp;</span></a>").addClass("RotatorPrevLink"),
+                $("<a href=\"#\"><span>&nbsp;</span></a>").addClass("RotatorNextLink"));*/
 
-            if(base.page_count > 3) {   // сдвигаем массив слайдов так чтобы вначале стояли слайды с последней страницы
+            if (base.page_count > 3) {   // сдвигаем массив слайдов так чтобы вначале стояли слайды с последней страницы
                 base.rotateItems(o.startPage);
                 base.refreshSlider();
-                //base.$container.find(o.itemsSelector).remove();                               // убираем в память все слайды
-                //base.$container.append(base.items.slice(0, 3*o.blocksPerScreen));             // добавляем слайдов только на три страницы
                 base.$container.css({ 'margin-left': -base.items_width * 4 * o.blocksPerScreen + '%' });
             }
 
             if (base.items_count <= o.blocksPerScreen) {
-                base.$el.addClass("not-enough-slides-static");
-                $(o.buttons_selector).hide();
-                base.$el.closest('.b-rotator-wrapper').find(o.navSelector).hide();
+                base.$el.addClass("b-rotator-not-enough-slides");
+                base.wrapper.find(o.buttons_selector).hide();
+                base.wrapper.find(o.navSelector).hide();
             } else {
                 base.buildNextPrevButtons();
                 if (o.navSelector && base.page_count > 1) {
@@ -109,26 +108,21 @@
         base.addHashChangeListener = function() {
             $(window).bind("hashchange", function(e) {
                 var page = e.getState(o.hashPrefix, true) || 1;
-                if (!base.animating) {
-                    base.gotoPage(page);
-                } else {
-                    //console.log("сменился хэш, в то время как ротатор анимируется, игнор");
-                }
+                base.gotoPage(page);
             });
         };
         base.addSwipeTouchListener = function() {
             $(this).bind({
                 "swipeleft": function () {
-                    if (!base.animating) { base.goNextPage(); }
+                    base.goNextPage();
                 },
                 "swiperight": function () {
-                    if (!base.animating) { base.goPrevPage(); }
+                    base.goPrevPage();
                 }
             });
         };
         base.addKeyboardListener = function() {
             $(document).keydown(function(e) {
-                if (base.animating) { return false; }
                 if (e.which == 37) {
                     base.goPrevPage();
                 } else if (e.which == 39) {
@@ -150,7 +144,7 @@
         base.buildNavigation = function() {
             var page_count = base.page_count,
                 pages_in_page, changeCount,
-                navigation = base.$el.closest('.b-rotator-wrapper').find(o.navSelector);
+                navigation = base.wrapper.find(o.navSelector);
             for (var i = 0; i < page_count; i++) {
                 pages_in_page = [];
                 changeCount = o.blocksChangePerPage;
@@ -164,12 +158,13 @@
             }
             navigation.find('a').first().addClass('Active');
             navigation.delegate('a', 'click', function () {
-                if (base.animating || $(this).hasClass('Active')) { return false; }
-                var target_page = $(this).data('items')[0];
+                var self = $(this);
+                if (base.animating || self.hasClass('Active')) { return false; }
+                var target_page = self.data('items')[0];
                 var pageIndex = (target_page-1)/o.blocksChangePerPage + 1;
 
-                navigation.removeClass('Active');
-                $(this).addClass('Active');
+                navigation.not(self).removeClass('Active');
+                self.addClass('Active');
                 if (o.hashPrefix) { base.updateHashUrl(target_page); }
                 base.gotoPage(pageIndex);
                 return false;
@@ -178,10 +173,11 @@
         /* Инициализация кнопок вперед/назад */
         base.buildNextPrevButtons = function() {
             if (o.hashPrefix) { base.updateNextPrevLinks(); }
-            base.$el.closest('.b-rotator-wrapper').find(o.buttons_selector).click(function () {
-                if(!base.animating) {
-                    if ($(this).is(o.prev)) { base.goPrevPage(); }
-                    else { base.goNextPage(); }
+            base.wrapper.find(o.buttons_selector).css('visibility', 'visible').click(function () {
+                if ($(this).is(o.prev)) {
+                    base.goPrevPage();
+                } else {
+                    base.goNextPage();
                 }
                 return false;
             });
@@ -193,9 +189,11 @@
             if (base.playing) {
                 base.clearTimer();
                 base.timer = setTimeout(function() {
-                    if (!base.animating) { base.goNextPage(); }
+                    base.goNextPage();
                 }, o.delay + o.duration);
-            } else { base.clearTimer(); }
+            } else {
+                base.clearTimer();
+            }
         };
         base.clearTimer = function() {
             if (base.timer) { clearTimeout(base.timer); base.timer = null; }        // Обнуляем таймер, если он был установлен
@@ -255,6 +253,7 @@
             if (base.animating || base.currentPage == end_index) { return; }
             base.animating = true;
             base.clearTimer();
+            base.wrapper.find(o.navSelector).find('a').eq(end_index-1).addClass('Active');
 
             var value_right, step, is_prev,
                 rotator_container = base.$container,
@@ -333,7 +332,7 @@
         };
         base.onAnimationComplete = function() {
             var rotator_container = base.$container,
-                $navlinks = base.$el.closest('.b-rotator-wrapper').find(o.navSelector).find('a');
+                $navlinks = base.wrapper.find(o.navSelector).find('a');
 
             base.refreshSlider();
             rotator_container.css(base.after_animate_css);
@@ -359,12 +358,14 @@
             base.$container.append(base.items.slice(0, 3*o.blocksPerScreen));
         };
         base.goNextPage = function() {
-            if (o.hashPrefix) { base.updateHashUrl(getNextPageIndex(base.currentPage)); }
-            base.gotoPage('next');
+            var nextPageIndex = getNextPageIndex(base.currentPage);
+            if (o.hashPrefix) { base.updateHashUrl( nextPageIndex ); }
+            base.gotoPage( nextPageIndex );
         };
         base.goPrevPage = function() {
-            if (o.hashPrefix) { base.updateHashUrl(getPrevPageIndex(base.currentPage)); }
-            base.gotoPage('prev');
+            var prevPageIndex = getPrevPageIndex(base.currentPage);
+            if (o.hashPrefix) { base.updateHashUrl( prevPageIndex ); }
+            base.gotoPage( prevPageIndex );
         };
         /* В разработке */
         base.centerOnCurrentSlide = function() {
@@ -380,9 +381,14 @@
             }
         };
         base.rotateItems = function(targetpage) {
+            var slidesToAddAmount = 3 * o.blocksPerScreen - base.items.length;
+            var slidesToAdd = base.items.slice(0, slidesToAddAmount);
             if (targetpage) {
                 var slidingDiff = targetpage - $(base.items.slice(o.blocksPerScreen,o.blocksPerScreen+1)).attr("index");
                 base.items = rotateArray( base.items, slidingDiff );
+            }
+            if (slidesToAddAmount > 0) {
+                $(slidesToAdd).clone().appendTo(base.$container);
             }
         };
 
@@ -444,7 +450,7 @@
         autoWidthCheck:      "opera",   // Слайдер будет расчитывать ширину слайдов в пикселях (спешал фор Опера)
         containerOverflow:   "hidden"
     };
-    $.fn.rotator2 = function(options) {
+    $.fn['rotator2'] = function(options) {
         // init slider
         if ((typeof(options)).match('object|undefined')) {
             return this.each(function() {

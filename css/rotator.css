@@ -15,6 +15,7 @@
 		height: 100%;
 		background: rgba(0,0,0,0.1);
 		text-decoration: none;
+		visibility: hidden;
 	}
 	.b-rotator__prev {
 		left: 0;
@@ -89,6 +90,7 @@
 				position: relative;
 				display: inline-block;
 				overflow: hidden;
+				width: 100%;
 				vertical-align: top;
 				text-align: center;
 				//zoom:1;
