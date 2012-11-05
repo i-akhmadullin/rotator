@@ -2,8 +2,9 @@
 	position: relative;
 	/* overflow: hidden; */
 	margin: 10px auto 40px;
-	min-height: 40px;
 	text-align: center;
+	-webkit-transform: translateZ(0);
+	-webkit-backface-visibility: hidden;
 }
 	.b-rotator__prev,
 	.b-rotator__next {
@@ -13,8 +14,12 @@
 		display: block;
 		width: 60px;
 		height: 100%;
-		background: rgba(0,0,0,0.1);
 		text-decoration: none;
+		visibility: hidden;
+	}
+	.b-rotator__prev:hover,
+	.b-rotator__next:hover {
+		background: rgba(0,0,0,0.06);
 	}
 	.b-rotator__prev {
 		left: 0;
@@ -23,10 +28,10 @@
 			position: relative;
 			top: 50%;
 			display: block;
-			margin: -48px auto 0 auto;
-			width: 63px;
-			height: 96px;
-			background: url(../img/arrow_left.png) no-repeat;
+			margin: -42px auto 0 auto;
+			width: 53px;
+			height: 83px;
+			background: url(../img/arrow_left.png) center center no-repeat;
 			cursor: pointer;
 		}
 		.b-rotator__prev:hover span {
@@ -50,9 +55,9 @@
 			position: relative;
 			top: 50%;
 			display: block;
-			margin: -48px auto 0 auto;
-			width: 65px;
-			height: 96px;
+			margin: -42px auto 0 auto;
+			width: 53px;
+			height: 83px;
 			background: url(../img/arrow_right.png) no-repeat;
 			cursor: pointer;
 		}
@@ -82,13 +87,13 @@
 			position: relative;
 			/* overflow: hidden; */
 			max-width: 32766px; /* opera */
-			max-height: 500px;
 			text-align: left;
 		}
 			.b-rotator__item {
 				position: relative;
 				display: inline-block;
 				overflow: hidden;
+				width: 100%;
 				vertical-align: top;
 				text-align: center;
 				//zoom:1;
@@ -99,6 +104,7 @@
 				}
 
 .b-rotator__paging a {
+	display: inline-block;
 	padding: 0 10px;
 	text-decoration: none;
 	font-size: 12px;

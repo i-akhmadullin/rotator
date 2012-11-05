@@ -1,0 +1,11 @@
+{
+    "name": "rotator",
+    "description": "jQuery.Rotator",
+    "version": "0.1.0",
+    "homepage": "http://github.com/i-akhmadullin/rotator",
+    "main": "./Gruntfile.js",
+    "dependencies": {
+        "grunt": "http://nodeload.github.com/gruntjs/grunt/tarball/0ba6d4b529",
+        "grunt-closure-compiler": "*"
+    }
+}
