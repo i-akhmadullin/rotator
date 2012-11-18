@@ -9,19 +9,18 @@
 		.wrapper{
 			overflow: hidden;
 			background: #e5e5e5;
-			background: -moz-linear-gradient(left,  #e5e5e5 0%, #ffffff 50%, #e5e5e5 100%);
-			background: -webkit-gradient(linear, left top, right top, color-stop(0%,#e5e5e5), color-stop(50%,#ffffff), color-stop(100%,#e5e5e5));
-			background: -webkit-linear-gradient(left,  #e5e5e5 0%,#ffffff 50%,#e5e5e5 100%);
-			background: -o-linear-gradient(left,  #e5e5e5 0%,#ffffff 50%,#e5e5e5 100%);
-			background: -ms-linear-gradient(left,  #e5e5e5 0%,#ffffff 50%,#e5e5e5 100%);
-			background: linear-gradient(to right,  #e5e5e5 0%,#ffffff 50%,#e5e5e5 100%);
+			background-image: -webkit-linear-gradient(left, #e5e5e5 0%, #ffffff 50%, #e5e5e5 100%);
+			background-image: -o-linear-gradient(left, #e5e5e5 0%, #ffffff 50%, #e5e5e5 100%);
+			background-image: -moz-linear-gradient(left, #e5e5e5 0%, #ffffff 50%, #e5e5e5 100%);
+			background-image: -webkit-gradient(linear, 0 0, 100% 0, from(#e5e5e5), color-stop(0.5, #ffffff), to(#e5e5e5));
+			background-image: linear-gradient(left, #e5e5e5 0%, #ffffff 50%, #e5e5e5 100%);
 		}
 		.content {
 			position:relative;
-			text-align: center;
-			width: 60%;
 			margin: 0 auto;
 			padding: 50px;
+			width: 60%;
+			text-align: center;
 			font-size: 0.8em;
 		}
 	</style>
@@ -89,6 +88,40 @@
 					<div class="b-rotator__paging b-rotator__paging_mod"></div>
 				</div>
 			</section>
+			
+			<section>
+				<header>
+					<h3>Галерея из двух слайдеров</h3>
+				</header>
+				<div class="b-rotator-wrapper">
+					<a href="#" class="b-rotator__prev"><span></span></a>
+					<a href="#" class="b-rotator__next"><span></span></a>
+					<div id="b-rotator_galleryview" class="b-rotator b-rotator-data" data-items=".b-rotator__item" data-prev=".b-rotator__prev" data-next=".b-rotator__next" data-easing="easeOutQuad" data-nav=".b-rotator__paging" data-navtemplate="<a href='#'><span>slide $i</span></a>">
+						<img class="b-rotator__item" src="http://farm7.static.flickr.com/6019/6312715714_3fa86a316f_b.jpg" alt=""/>
+						<img class="b-rotator__item" src="http://farm4.staticflickr.com/3587/3282404832_4839f7e337_b.jpg" alt=""/>
+						<img class="b-rotator__item" src="http://farm7.staticflickr.com/6125/5985076900_04b0e194f0_b.jpg" alt=""/>
+						<img class="b-rotator__item" src="http://farm8.staticflickr.com/7063/6896551129_abe08bd743_b.jpg" alt=""/>
+						<img class="b-rotator__item" src="http://farm8.staticflickr.com/7183/6886298855_0f16c8ce8b_b.jpg" alt=""/>
+					</div>
+					<div id="b-rotator_gallerypreview" class="b-rotator b-rotator-data" data-items=".b-rotator__item" data-prev=".b-rotator__prev" data-next=".b-rotator__next" data-easing="easeOutQuad" data-perscreen="5">
+						<a href="#" class="b-rotator__item b-rotator__item_paging"><img src="http://farm7.static.flickr.com/6019/6312715714_3fa86a316f_b.jpg" alt=""/></a>
+						<a href="#" class="b-rotator__item b-rotator__item_paging"><img src="http://farm4.staticflickr.com/3587/3282404832_4839f7e337_b.jpg" alt=""/>
+						<a href="#" class="b-rotator__item b-rotator__item_paging"><img src="http://farm7.staticflickr.com/6125/5985076900_04b0e194f0_b.jpg" alt=""/>
+						<a href="#" class="b-rotator__item b-rotator__item_paging"><img src="http://farm8.staticflickr.com/7063/6896551129_abe08bd743_b.jpg" alt=""/>
+						<a href="#" class="b-rotator__item b-rotator__item_paging"><img src="http://farm8.staticflickr.com/7183/6886298855_0f16c8ce8b_b.jpg" alt=""/>
+					</div>
+				</div>
+			</section>
+			<script>
+				$(function() {
+					var galleryRotator = $('#b-rotator_galleryview');
+					$('#b-rotator_gallerypreview').on('click', '.b-rotator__item', function() {
+						var pageIndex = parseInt($(this).attr('index'), 10);
+						galleryRotator.rotator2( pageIndex );
+						return false;
+					});
+				});
+			</script>
 			<section>
 				<header>
 					<h3>Много слайдов</h3>
@@ -323,6 +356,64 @@
 				</header>
 				<div class="b-rotator-wrapper">
 					<div class="b-rotator b-rotator-data" data-items=".b-rotator__item" data-prev=".b-rotator__prev" data-next=".b-rotator__next" data-nav=".b-rotator__paging" data-perscreen="7" data-perpage="4">
+						<span class="b-rotator__item">
+							<a href="#"><img src="img/img1.jpg" alt=""/></a>
+						</span>
+						<span class="b-rotator__item">
+							<a href="#"><img src="img/img2.jpg" alt=""/></a>
+						</span>
+						<span class="b-rotator__item">
+							<a href="#"><img src="img/img3.jpg" alt=""/></a>
+						</span>
+						<span class="b-rotator__item">
+							<a href="#"><img src="img/img4.jpg" alt=""/></a>
+						</span>
+						<span class="b-rotator__item">
+							<a href="#"><img src="img/img5.jpg" alt=""/></a>
+						</span>
+						<span class="b-rotator__item">
+							<a href="#"><img src="img/img6.jpg" alt=""/></a>
+						</span>
+						<span class="b-rotator__item">
+							<a href="#"><img src="img/img7.jpg" alt=""/></a>
+						</span>
+						<span class="b-rotator__item">
+							<a href="#"><img src="img/img8.jpg" alt=""/></a>
+						</span>
+						<span class="b-rotator__item">
+							<a href="#"><img src="img/img9.jpg" alt=""/></a>
+						</span>
+						<span class="b-rotator__item">
+							<a href="#"><img src="img/img10.jpg" alt=""/></a>
+						</span>
+						<span class="b-rotator__item">
+							<a href="#"><img src="img/img11.jpg" alt=""/></a>
+						</span>
+						<span class="b-rotator__item">
+							<a href="#"><img src="img/img12.jpg" alt=""/></a>
+						</span>
+						<span class="b-rotator__item">
+							<a href="#"><img src="img/img13.jpg" alt=""/></a>
+						</span>
+						<span class="b-rotator__item">
+							<a href="#"><img src="img/img14.jpg" alt=""/></a>
+						</span>
+						<span class="b-rotator__item">
+							<a href="#"><img src="img/img15.jpg" alt=""/></a>
+						</span>
+						<span class="b-rotator__item">
+							<a href="#"><img src="img/img16.jpg" alt=""/></a>
+						</span>
+					</div>
+					<div class="b-rotator__paging"></div>
+				</div>
+			</section>
+			<section>
+				<header>
+					<h3>7.5 блоков на слайд, 1 переключается за страницу, всего 16 блоков</h3>
+				</header>
+				<div class="b-rotator-wrapper">
+					<div class="b-rotator b-rotator-data" data-items=".b-rotator__item" data-prev=".b-rotator__prev" data-next=".b-rotator__next" data-nav=".b-rotator__paging" data-perscreen="7.5" data-perpage="1">
 						<span class="b-rotator__item">
 							<a href="#"><img src="img/img1.jpg" alt=""/></a>
 						</span>
